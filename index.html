@@ -1,1440 +1,729 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>입사주식 - 청소년 모의 투자</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#F4F6FA;
-  --surface:#FFFFFF;
-  --surface-2:#EEF1F7;
-  --border:#DDE3ED;
-  --mint:#0E9F6E;
-  --mint-dim:#E4F7EE;
-  --gold:#B7791F;
-  --up:#E0332F;       /* 상승 = 빨강 */
-  --down:#0E9F4E;      /* 하락 = 초록 */
-  --text:#131A29;
-  --muted:#5B6478;
-  --faint:#8A93A6;
-  --shadow:0 2px 10px rgba(20,30,50,.05);
-}
-*{box-sizing:border-box; margin:0; padding:0;}
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Noto Sans KR', sans-serif;
-  -webkit-font-smoothing:antialiased;
-  min-height:100vh;
-  overflow-x:hidden;
-}
-.num{font-family:'JetBrains Mono', monospace;}
-.disp{font-family:'Space Grotesk', sans-serif;}
-button{font-family:inherit; cursor:pointer; border:none;}
-::-webkit-scrollbar{width:6px; height:6px;}
-::-webkit-scrollbar-thumb{background:var(--border); border-radius:4px;}
-
-#app{max-width:480px; margin:0 auto; min-height:100vh; background:var(--bg); position:relative; display:flex; flex-direction:column;}
-
-/* ---------- 랜딩 ---------- */
-.landing{padding:36px 22px 100px;}
-.landing-hero{margin-bottom:28px;}
-.landing-badge{
-  display:inline-flex; align-items:center; gap:6px;
-  background:var(--mint-dim); color:var(--mint); font-size:11px; font-weight:700;
-  padding:5px 10px; border-radius:20px; letter-spacing:.3px; margin-bottom:16px;
-}
-.landing-badge::before{content:'●'; font-size:8px;}
-.landing h1{
-  font-family:'Space Grotesk', sans-serif; font-size:32px; font-weight:700; line-height:1.3;
-  letter-spacing:-.5px;
-}
-.landing h1 em{font-style:normal; color:var(--mint);}
-.landing p.sub{color:var(--muted); font-size:14px; margin-top:12px; line-height:1.6;}
-.capital-strip{
-  margin-top:22px; background:linear-gradient(135deg,var(--surface-2),var(--surface));
-  border:1px solid var(--border); box-shadow:var(--shadow); border-radius:16px; padding:18px 20px;
-  display:flex; justify-content:space-between; align-items:center;
-}
-.capital-strip .lbl{font-size:12px; color:var(--muted);}
-.capital-strip .val{font-family:'Space Grotesk'; font-size:22px; font-weight:700; color:var(--mint); margin-top:4px;}
-.section-lbl{
-  font-size:12px; font-weight:700; color:var(--faint); letter-spacing:1px; text-transform:uppercase;
-  margin:30px 0 14px;
-}
-.company-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-.company-card{
-  background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:16px; padding:16px;
-  text-align:left; transition:transform .15s, border-color .15s; position:relative; overflow:hidden;
-}
-.company-card:active{transform:scale(.97);}
-.company-card:hover{border-color:var(--mint);}
-.company-logo{
-  width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
-  font-family:'Space Grotesk'; font-weight:700; font-size:19px; color:#0B1120; margin-bottom:10px;
-}
-.company-card .cname{font-weight:700; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.company-card .csector{font-size:11.5px; color:var(--muted); margin-top:2px;}
-.company-card .cprice{font-family:'JetBrains Mono'; font-size:11px; color:var(--faint); margin-top:8px;}
-
-/* ---------- 입사 모달 ---------- */
-.modal-overlay{
-  position:fixed; inset:0; background:rgba(5,8,16,.75); backdrop-filter:blur(4px);
-  display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;
-  animation:fadeIn .2s ease;
-}
-@keyframes fadeIn{from{opacity:0} to{opacity:1}}
-.modal{
-  background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:20px; padding:28px 24px;
-  max-width:340px; width:100%; text-align:center; animation:popIn .28s cubic-bezier(.2,1.4,.4,1);
-}
-@keyframes popIn{from{opacity:0; transform:scale(.85) translateY(10px)} to{opacity:1; transform:scale(1) translateY(0)}}
-.modal .company-logo{margin:0 auto 14px;}
-.modal h3{font-size:18px; font-weight:700;}
-.modal p{font-size:13px; color:var(--muted); margin-top:8px; line-height:1.6;}
-.modal-actions{display:flex; gap:8px; margin-top:22px;}
-.btn{
-  flex:1; padding:13px; border-radius:12px; font-weight:700; font-size:14px; transition:opacity .15s;
-}
-.btn:active{opacity:.7;}
-.btn-primary{background:var(--mint); color:#FFFFFF;}
-.btn-ghost{background:var(--surface-2); color:var(--muted);}
-
-/* ---------- 사원증 발급 애니메이션 ---------- */
-.badge-reveal{display:flex; flex-direction:column; align-items:center; padding:10px 0 4px;}
-.id-card{
-  width:220px; background:linear-gradient(160deg,var(--surface-2),var(--surface));
-  border:1px solid var(--border); box-shadow:var(--shadow); border-radius:18px; padding:20px 18px; position:relative;
-  box-shadow:0 20px 40px -12px rgba(0,0,0,.6); animation:cardDrop .5s cubic-bezier(.2,1.5,.4,1);
-}
-@keyframes cardDrop{from{opacity:0; transform:translateY(-30px) rotate(-6deg)} to{opacity:1; transform:translateY(0) rotate(0)}}
-.id-card::before{
-  content:''; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
-  width:36px; height:14px; border:2px solid var(--faint); border-bottom:none; border-radius:10px 10px 0 0;
-}
-.id-card .co{font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;}
-.id-card .logo-lg{width:44px; height:44px; border-radius:12px; margin:10px 0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:22px; color:#0B1120;}
-.id-card .name{font-weight:700; font-size:15px;}
-.id-card .role{font-size:12px; color:var(--gold); font-weight:700; margin-top:2px;}
-.id-card .idno{font-family:'JetBrains Mono'; font-size:10px; color:var(--faint); margin-top:12px;}
-
-/* ---------- 상단바 / 티커 ---------- */
-.topbar{
-  background:var(--surface); border-bottom:1px solid var(--border); padding:14px 18px 0;
-  position:sticky; top:0; z-index:20;
-}
-.topbar-row{display:flex; align-items:center; justify-content:space-between;}
-.mini-id{display:flex; align-items:center; gap:9px;}
-.mini-id .logo-sm{width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:15px; color:#0B1120;}
-.mini-id .who{font-size:12.5px;}
-.mini-id .who b{font-weight:700; display:block; font-size:13px;}
-.mini-id .who span{color:var(--gold); font-size:10.5px; font-weight:700;}
-.asset-tag{text-align:right;}
-.asset-tag .lbl{font-size:9.5px; color:var(--muted);}
-.asset-tag .val{font-family:'JetBrains Mono'; font-weight:700; font-size:15px;}
-.ticker-wrap{overflow:hidden; margin:12px -18px 0; border-top:1px solid var(--border); background:var(--bg);}
-.ticker-track{display:flex; width:max-content; animation:scrollTicker 28s linear infinite; padding:8px 0;}
-@keyframes scrollTicker{from{transform:translateX(0)} to{transform:translateX(-50%)}}
-.ticker-item{display:flex; align-items:center; gap:6px; padding:0 16px; font-family:'JetBrains Mono'; font-size:11px; white-space:nowrap; border-right:1px solid var(--border);}
-.ticker-item .tname{color:var(--muted); font-family:'Noto Sans KR';}
-
-/* ---------- 탭바 ---------- */
-.tabbar{
-  display:flex; background:var(--surface); border-top:1px solid var(--border);
-  position:sticky; bottom:0; z-index:20; padding-bottom:env(safe-area-inset-bottom);
-}
-.tab{flex:1; padding:10px 2px 9px; text-align:center; color:var(--faint); font-size:9.5px; font-weight:700; white-space:nowrap;}
-.tab .ic{font-size:16px; display:block; margin-bottom:2px;}
-.tab.active{color:var(--mint);}
-
-.screen{flex:1; padding:18px 18px 26px; overflow-y:auto;}
-
-/* ---------- 홈 ---------- */
-.hero-card{
-  background:linear-gradient(135deg,var(--surface-2),var(--surface)); border:1px solid var(--border);
-  border-radius:18px; padding:22px; margin-bottom:18px;
-}
-.hero-card .lbl{font-size:12px; color:var(--muted);}
-.hero-card .total{font-family:'Space Grotesk'; font-size:30px; font-weight:700; margin-top:6px;}
-.hero-card .change{font-family:'JetBrains Mono'; font-size:13px; margin-top:6px; font-weight:700;}
-.up{color:var(--up);} .down{color:var(--down);} .flat{color:var(--muted);}
-.rank-progress{margin-top:18px;}
-.rank-progress .rr{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:6px;}
-.bar-bg{height:6px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
-.bar-fill{height:100%; background:linear-gradient(90deg,var(--gold),var(--mint)); border-radius:4px; transition:width .4s;}
-
-.stat-row{display:flex; gap:10px; margin-bottom:18px;}
-.stat-box{flex:1; background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:14px; padding:14px;}
-.stat-box .lbl{font-size:11px; color:var(--muted);}
-.stat-box .val{font-family:'JetBrains Mono'; font-weight:700; font-size:15px; margin-top:5px;}
-
-.holding-mini{display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:12px; padding:12px 14px; margin-bottom:8px;}
-.holding-mini .left{display:flex; align-items:center; gap:10px;}
-.holding-mini .logo-xs{width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:14px; color:#0B1120; flex-shrink:0;}
-.holding-mini .nm{font-size:13px; font-weight:700;}
-.holding-mini .qty{font-size:10.5px; color:var(--muted);}
-.holding-mini .right{text-align:right;}
-.holding-mini .pl{font-family:'JetBrains Mono'; font-size:12.5px; font-weight:700;}
-.empty-note{color:var(--faint); font-size:12.5px; text-align:center; padding:22px 10px; border:1px dashed var(--border); border-radius:12px;}
-
-/* ---------- 시장/종목 리스트 ---------- */
-.stock-row{
-  display:flex; align-items:center; justify-content:space-between; background:var(--surface);
-  border:1px solid var(--border); box-shadow:var(--shadow); border-radius:14px; padding:13px 14px; margin-bottom:9px;
-}
-.stock-row .left{display:flex; align-items:center; gap:11px; min-width:0;}
-.stock-row .info .nm{font-size:13.5px; font-weight:700;}
-.stock-row .info .sec{font-size:10.5px; color:var(--muted);}
-.spark{width:64px; height:28px; flex-shrink:0;}
-.stock-row .right{text-align:right; flex-shrink:0; margin-left:8px;}
-.stock-row .price{font-family:'JetBrains Mono'; font-weight:700; font-size:13.5px;}
-.stock-row .chg{font-family:'JetBrains Mono'; font-size:11px; margin-top:2px;}
-
-/* ---------- 종목 상세 ---------- */
-.detail-head{display:flex; align-items:center; gap:12px; margin-bottom:16px;}
-.back-btn{background:var(--surface); border:1px solid var(--border); width:34px; height:34px; border-radius:10px; color:var(--text); font-size:16px;}
-.detail-price{font-family:'Space Grotesk'; font-size:28px; font-weight:700; margin:14px 0 4px;}
-.chart-box{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:16px; padding:14px; margin-bottom:16px;}
-.trade-panel{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:16px; padding:16px; margin-bottom:14px;}
-.trade-tabs{display:flex; gap:8px; margin-bottom:14px;}
-.ttab{flex:1; padding:9px; border-radius:10px; font-weight:700; font-size:13px; background:var(--surface-2); color:var(--muted);}
-.ttab.on-buy{background:var(--up); color:#fff;}
-.ttab.on-sell{background:var(--down); color:#fff;}
-.qty-row{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
-.qty-btn{width:38px; height:38px; border-radius:10px; background:var(--surface-2); color:var(--text); font-size:18px; font-weight:700;}
-.qty-input{flex:1; text-align:center; background:var(--surface-2); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:10px; padding:9px; color:var(--text); font-family:'JetBrains Mono'; font-size:15px; font-weight:700;}
-.trade-summary{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-bottom:14px;}
-.trade-summary b{color:var(--text); font-family:'JetBrains Mono';}
-.confirm-btn{width:100%; padding:14px; border-radius:12px; font-weight:700; font-size:14.5px; color:#fff;}
-.msg-toast{
-  position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--surface-2);
-  border:1px solid var(--border); padding:11px 20px; border-radius:30px; font-size:12.5px; font-weight:700;
-  z-index:60; animation:toastIn .25s ease; max-width:88%; text-align:center;
-}
-@keyframes toastIn{from{opacity:0; transform:translate(-50%,10px)} to{opacity:1; transform:translate(-50%,0)}}
-
-/* ---------- 거래내역 ---------- */
-.tx-row{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);}
-.tx-row .tag{font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-right:8px;}
-.tag-buy{background:rgba(255,82,82,.15); color:var(--up);}
-.tag-sell{background:rgba(76,141,255,.15); color:var(--down);}
-.tx-row .nm{font-size:13px; font-weight:700; display:inline;}
-.tx-row .meta{font-size:10.5px; color:var(--muted); margin-top:3px;}
-.tx-row .reason{font-size:11.5px; color:var(--text); margin-top:5px; line-height:1.5; max-width:220px;}
-.tx-row .amt{font-family:'JetBrains Mono'; font-weight:700; font-size:13px;}
-
-/* ---------- 랭킹 ---------- */
-.rank-hero{text-align:center; padding:20px 10px 8px;}
-.rank-hero .logo-lg{margin:0 auto 12px;}
-.rank-hero .title{font-size:20px; font-weight:700;}
-.rank-hero .desc{font-size:12px; color:var(--muted); margin-top:4px;}
-.ladder{margin-top:20px;}
-.ladder-item{display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:12px; margin-bottom:6px;}
-.ladder-item.current{background:var(--mint-dim); border:1px solid var(--mint);}
-.ladder-item .lv-ic{width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:var(--surface-2); flex-shrink:0;}
-.ladder-item.current .lv-ic{background:var(--mint); color:#FFFFFF;}
-.ladder-item .lv-name{font-size:13px; font-weight:700;}
-.ladder-item .lv-req{font-size:10.5px; color:var(--muted);}
-.leader-list{margin-top:8px;}
-.leader-row{display:flex; align-items:center; justify-content:space-between; padding:11px 4px; border-bottom:1px solid var(--border);}
-.leader-row.me{background:var(--mint-dim); border-radius:10px; padding:11px 10px; border-bottom:none; margin:4px 0;}
-.leader-row .lrank{font-family:'Space Grotesk'; font-weight:700; width:26px; color:var(--faint);}
-.leader-row .lname{font-size:13px; font-weight:700; flex:1; margin-left:6px;}
-.leader-row .lval{font-family:'JetBrains Mono'; font-size:12.5px; font-weight:700;}
-
-/* ---------- 학습(용어사전 / 출석퀴즈) ---------- */
-.subnav{display:flex; gap:8px; margin-bottom:18px;}
-.subnav-btn{flex:1; padding:11px; border-radius:12px; font-weight:700; font-size:12.5px; background:var(--surface); border:1px solid var(--border); color:var(--muted);}
-.subnav-btn.active{background:var(--mint); border-color:var(--mint); color:#fff;}
-
-.term-card{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:14px; padding:14px 16px; margin-bottom:10px;}
-.term-card .tname{font-weight:700; font-size:14px; color:var(--mint);}
-.term-card .tdef{font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.55;}
-
-.date-setter{display:flex; gap:8px; align-items:flex-end; margin-bottom:16px;}
-.date-field{flex:1;}
-.date-field label{font-size:11px; color:var(--muted); display:block; margin-bottom:5px; font-weight:600;}
-.date-field input{width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface); font-family:'JetBrains Mono'; font-size:14px; text-align:center; color:var(--text);}
-.date-apply-btn{padding:0 18px; height:40px; border-radius:10px; background:var(--mint); color:#fff; font-weight:700; font-size:12.5px; white-space:nowrap;}
-
-.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
-.cal-dow{text-align:center; font-size:10.5px; color:var(--faint); font-weight:700; padding-bottom:2px;}
-.cal-cell{aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:9px; font-family:'JetBrains Mono'; font-size:11.5px; background:var(--surface-2); color:var(--faint); border:1.5px solid transparent;}
-.cal-cell.empty{background:transparent;}
-.cal-cell.stamped{background:var(--mint-dim); color:var(--mint); font-weight:700;}
-.cal-cell.current{border-color:var(--mint); color:var(--text); font-weight:700; background:var(--surface);}
-
-.complete-banner{background:var(--mint-dim); border:1px solid var(--mint); border-radius:16px; padding:22px; text-align:center;}
-
-.quiz-card{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:16px; padding:20px;}
-.quiz-q{font-size:14px; font-weight:700; line-height:1.6; margin-bottom:16px;}
-.quiz-choice{display:block; width:100%; text-align:left; padding:13px 14px; border-radius:12px; background:var(--surface-2); border:1.5px solid var(--border); margin-bottom:9px; font-size:13.5px; font-weight:600; color:var(--text); transition:.15s;}
-.quiz-choice.correct{background:var(--mint-dim); border-color:var(--mint); color:var(--mint);}
-.quiz-choice.wrong{background:#FDE8E8; border-color:var(--up); color:var(--up);}
-.quiz-choice:disabled{opacity:.85;}
-
-/* ---------- 뉴스 ---------- */
-.news-disclaimer{font-size:11px; color:var(--muted); background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:11px 13px; line-height:1.55; margin-bottom:16px;}
-.news-card{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:16px; padding:17px; margin-bottom:12px;}
-.news-meta{font-size:10.5px; color:var(--faint); font-weight:700; letter-spacing:.3px;}
-.news-title{font-size:15px; font-weight:700; margin-top:6px; line-height:1.4;}
-.news-body{font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.6;}
-.ai-btn{width:100%; margin-top:13px; padding:11px; border-radius:11px; background:var(--surface-2); border:1px solid var(--border); color:var(--mint); font-weight:700; font-size:12.5px;}
-.ai-btn:disabled{opacity:.6;}
-.ai-out{margin-top:12px; background:var(--mint-dim); border:1px solid var(--mint); border-radius:12px; padding:13px 14px;}
-.ai-badge{font-size:10.5px; font-weight:700; color:var(--mint); margin-bottom:6px;}
-.ai-text{font-size:12.5px; color:var(--text); line-height:1.6; white-space:pre-wrap;}
-.ai-loading{font-size:12.5px; color:var(--muted);}
-.ai-error{font-size:12px; color:var(--up);}
-
-/* ---------- 투자 게시판 ---------- */
-.board-compose{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:14px; padding:14px; margin-bottom:16px;}
-.board-compose textarea{width:100%; min-height:60px; resize:vertical; border:1px solid var(--border); border-radius:10px; padding:10px; font-family:inherit; font-size:13px; color:var(--text); background:var(--surface-2); line-height:1.5;}
-.board-compose-btn{width:100%; margin-top:9px; padding:11px; border-radius:11px; background:var(--mint); color:#fff; font-weight:700; font-size:13px;}
-.board-post{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:16px; padding:16px; margin-bottom:12px;}
-.board-post .bp-head{display:flex; align-items:center; gap:9px;}
-.board-post .bp-who{font-size:13px; font-weight:700;}
-.board-post .bp-time{font-size:10.5px; color:var(--faint); margin-left:auto;}
-.board-post .bp-tag{font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-top:6px; display:inline-block;}
-.board-post .bp-text{font-size:13px; color:var(--text); margin-top:9px; line-height:1.6; white-space:pre-wrap;}
-.board-post .bp-comments{margin-top:12px; border-top:1px solid var(--border); padding-top:10px;}
-.board-post .bp-comment{font-size:12px; color:var(--muted); margin-bottom:6px; line-height:1.5;}
-.board-post .bp-comment b{color:var(--text);}
-.board-post .bp-comment-row{display:flex; gap:8px; margin-top:8px;}
-.board-post .bp-comment-row input{flex:1; border:1px solid var(--border); border-radius:9px; padding:8px 10px; font-size:12px; background:var(--surface-2); color:var(--text);}
-.board-post .bp-comment-row button{padding:0 14px; border-radius:9px; background:var(--surface-2); color:var(--mint); font-weight:700; font-size:12px;}
-</style>
-</head>
-<body>
-<div id="app"></div>
-
-<script>
-/* ============ 데이터 ============ */
-const COMPANIES = [
-  {id:'samsung', name:'삼성전자',     code:'005930', sector:'반도체',   color:'#1428A0', base:71000,  icon:'📱', shares:5969, per:14.2},
-  {id:'hynix',   name:'SK하이닉스',   code:'000660', sector:'반도체',   color:'#EE3524', base:185000, icon:'💾', shares:728,  per:21.6},
-  {id:'naver',   name:'NAVER',        code:'035420', sector:'IT서비스', color:'#03C75A', base:215000, icon:'🔍', shares:164,  per:27.8},
-  {id:'kakao',   name:'카카오',       code:'035720', sector:'IT서비스', color:'#FEE500', base:42000,  icon:'💬', shares:487,  per:34.5},
-  {id:'lgen',    name:'LG에너지솔루션', code:'373220', sector:'2차전지', color:'#A50034', base:410000, icon:'🔋', shares:234,  per:44.9},
-  {id:'hyundai', name:'현대차',       code:'005380', sector:'자동차',   color:'#002C5F', base:245000, icon:'🚗', shares:209,  per:6.4},
-  {id:'celltrion',name:'셀트리온',    code:'068270', sector:'바이오',   color:'#00A651', base:178000, icon:'🧬', shares:135,  per:39.7},
-  {id:'posco',   name:'POSCO홀딩스',  code:'005490', sector:'철강',     color:'#00539B', base:395000, icon:'⚙️', shares:87,   per:9.8},
-];
-const INIT_CAPITAL = 1000000;
-const MAX_QTY = Infinity;        // 거래 수량 제한 없음
-const CANDLE_TICKS = 6;          // 이 틱 수마다 새 캔들(봉) 시작
-const DAILY_QUIZ_REWARD = 10000;      // 출석 퀴즈 하루 정답 보상
-const MONTHLY_COMPLETE_REWARD = 100000; // 한 달 출석 전부 채웠을 때 보너스
-const RANKS = [
-  {key:'intern', name:'인턴사원', min:-999,  emoji:'🌱'},
-  {key:'staff',  name:'사원',     min:0,     emoji:'📋'},
-  {key:'asst',   name:'대리',     min:10,    emoji:'💼'},
-  {key:'mgr',    name:'과장',     min:30,    emoji:'📊'},
-  {key:'dmgr',   name:'차장',     min:60,    emoji:'📈'},
-  {key:'gm',     name:'부장',     min:100,   emoji:'🏆'},
-  {key:'dir',    name:'이사',     min:200,   emoji:'💎'},
-  {key:'ceo',    name:'대표이사', min:400,   emoji:'👑'},
-];
-const BOTS = [ // 재미용 가상 리더보드(픽션)
-  {name:'주식왕민준', roi:187}, {name:'투자요정하은', roi:142}, {name:'존버의신', roi:98},
-  {name:'차트마스터', roi:61}, {name:'용돈모아', roi:34},
-];
-
-/* ============ 상태 ============ */
-let state = {
-  screen:'landing',        // landing | dashboard
-  tab:'home',              // home | market | portfolio | history | learn | news | rank
-  company:null,
-  cash:0,
-  holdings:{},              // id -> {qty, avg}
-  tx:[],
-  stocks:{},                 // id -> {price, candles:[{o,h,l,c,v}], tickCount}
-  selectedStock:null,
-  tradeMode:'buy',
-  tradeQty:1,
-  tradeQtyInput:null,   // 입력창에 표시할 원본 문자열(입력 중 상태 보존용)
-  tradeReason:'',        // 매수/매도 전에 작성해야 하는 투자 이유
-  pendingCompany:null,
-  toast:null,
-  learnView:'quiz',      // quiz | terms
-  att:{ year:0, month:0, day:0, stamped:{}, monthBonusGiven:{} }, // stamped["YYYY-M"] -> [day, ...]
-  quiz:null,
-  newsAI:{},              // id -> {status:'loading'|'done'|'error', text}
-  board:[],               // 투자 공유 게시판 글 목록
-  boardDraft:'',          // 게시판 글쓰기 입력 중인 내용
-};
-
-function genInitialCandles(base){
-  const candles = [];
-  let prevClose = base * (1 - (Math.random()*0.06));
-  for(let i=0;i<26;i++){
-    const open = prevClose;
-    const drift = (Math.random()-0.48) * 0.025;
-    const close = Math.max(open*(1+drift), base*0.2);
-    const high = Math.max(open,close) * (1 + Math.random()*0.012);
-    const low = Math.min(open,close) * (1 - Math.random()*0.012);
-    const vol = Math.round(300000 + Math.random()*1200000);
-    candles.push({o:open,h:high,l:low,c:close,v:vol});
-    prevClose = close;
-  }
-  return candles;
-}
-
-COMPANIES.forEach(c=>{
-  const candles = genInitialCandles(c.base);
-  state.stocks[c.id] = { price: candles[candles.length-1].c, candles, tickCount:0, prevClose: candles[candles.length-2] ? candles[candles.length-2].c : candles[0].o };
-});
-
-/* 출석 스탬프 - 기기의 실제 오늘 날짜로 초기화 (사용자가 직접 바꿀 수도 있음) */
-(function initAttDate(){
-  const now = new Date();
-  state.att.year = now.getFullYear();
-  state.att.month = now.getMonth()+1;
-  state.att.day = now.getDate();
-})();
-
-/* ============ 경제/주식 용어 사전 ============ */
-const TERMS = [
-  {term:'주식', def:'회사가 사업 자금을 마련하려고 발행하는, 회사 소유권의 일부를 나타내는 증서예요. 주식을 사면 그 회사의 주인 중 한 명이 되는 거예요.'},
-  {term:'배당금', def:'회사가 벌어들인 이익의 일부를 주식을 가진 사람들에게 나눠주는 돈이에요.'},
-  {term:'시가총액', def:'주식 가격에 발행된 전체 주식 수를 곱한 값으로, 그 회사의 몸값을 나타내는 지표예요.'},
-  {term:'코스피', def:'한국의 대표 증권시장에 상장된 회사들의 주가를 종합해서 보여주는 지수예요.'},
-  {term:'코스닥', def:'코스피보다 상대적으로 규모가 작은 성장·벤처기업들이 많이 상장된 증권시장이에요.'},
-  {term:'매수', def:'주식이나 자산을 사는 것을 말해요.'},
-  {term:'매도', def:'주식이나 자산을 파는 것을 말해요.'},
-  {term:'손절매', def:'손실이 더 커지기 전에, 손해를 보더라도 주식을 파는 것을 말해요.'},
-  {term:'분산투자', def:'한 종목에만 돈을 몰아넣지 않고 여러 자산에 나눠 투자해서 위험을 줄이는 전략이에요.'},
-  {term:'PER', def:'주가수익비율. 주가가 1주당 순이익의 몇 배인지 보여주는 지표로, 낮을수록 저평가됐다고 볼 수 있어요.'},
-  {term:'PBR', def:'주가순자산비율. 주가가 1주당 순자산의 몇 배인지를 나타내는 지표예요.'},
-  {term:'인플레이션', def:'물가가 계속 오르면서 돈의 가치가 떨어지는 현상이에요.'},
-  {term:'기준금리', def:'한 나라의 중앙은행이 정하는, 다른 모든 금리의 기준이 되는 금리예요. 한국은행이 정해요.'},
-  {term:'환율', def:'우리나라 돈과 다른 나라 돈을 교환하는 비율이에요. 원/달러 환율은 1달러를 사는 데 우리 돈이 얼마나 필요한지를 뜻해요.'},
-  {term:'채권', def:'정부나 회사가 돈을 빌리면서 나중에 갚겠다고 약속하며 발행하는 증서예요.'},
-  {term:'ETF', def:'여러 주식을 묶어서 하나의 상품처럼 거래할 수 있게 만든 펀드예요. 특정 지수를 따라가는 경우가 많아요.'},
-  {term:'상장', def:'회사의 주식을 증권시장에서 자유롭게 사고팔 수 있도록 등록하는 것을 말해요.'},
-  {term:'공모주', def:'회사가 처음 주식시장에 상장할 때 일반인에게 파는 주식이에요.'},
-  {term:'우량주', def:'실적이 안정적이고 재무구조가 튼튼한, 믿을 만한 대기업의 주식을 말해요.'},
-  {term:'테마주', def:'특정 이슈나 유행과 관련 있다고 여겨져 함께 오르내리는 주식들을 말해요.'},
-  {term:'급등', def:'주가가 짧은 시간에 크게 오르는 것을 말해요.'},
-  {term:'급락', def:'주가가 짧은 시간에 크게 떨어지는 것을 말해요.'},
-  {term:'자산', def:'개인이나 회사가 가진, 돈이 되는 가치 있는 모든 것(현금, 부동산, 주식 등)을 말해요.'},
-  {term:'부채', def:'다른 사람이나 기관에게 갚아야 할 빚을 말해요.'},
-  {term:'순이익', def:'회사가 모든 비용과 세금을 다 내고 남은 최종 이익을 말해요.'},
-];
-
-/* ============ 경제 뉴스 (2026년 8월 기준 실제 보도를 청소년 눈높이로 재구성) ============ */
-const NEWS = [
-  {id:'n1', title:'한국은행, 기준금리 0.25%p 인상', source:'한국은행', date:'2026.08',
-   body:'한국은행 금융통화위원회가 기준금리를 2.50%에서 2.75%로 0.25%포인트 올리기로 했어요. 물가와 환율 등 여러 경제 상황을 종합적으로 고려한 결정이라고 해요.'},
-  {id:'n2', title:'KDI, 올해 성장률 전망 3.2%로 상향', source:'한국개발연구원(KDI)', date:'2026.08',
-   body:'한국개발연구원은 반도체 경기가 좋아진 덕분에 올해 우리나라 경제성장률이 3.2%에 이를 것으로 내다봤어요. 내년에도 2.2% 성장을 이어갈 것으로 전망했어요.'},
-  {id:'n3', title:'원/달러 환율, 두 달여 만에 1450원대로 하락', source:'한국경제', date:'2026.07',
-   body:'원/달러 환율이 종가 기준 1450원대까지 내려왔어요. 이렇게 낮아진 건 지난 5월 이후 처음이에요. 환율이 내려가면 원화 가치는 상대적으로 오른 셈이에요.'},
-  {id:'n4', title:'소비자심리지수, 개선 흐름 이어가', source:'한국은행', date:'2026',
-   body:'사람들이 느끼는 경기 체감도를 보여주는 소비자심리지수(CCSI)가 최근 상승세를 보이고 있어요. 현재 생활수준과 미래 소득에 대한 기대가 함께 높아진 결과예요.'},
-  {id:'n5', title:'이번 주 경제 캘린더: 미국 PMI·실업수당 발표 예정', source:'경제 캘린더', date:'2026.08',
-   body:'이번 주에는 미국의 구매관리자지수(PMI), 신규 실업수당 청구건수, 유로존 물가지표(CPI) 등 시장이 주목하는 주요 경제지표 발표가 예정돼 있어요.'},
-];
-
-/* ============ 종목 상세: 왜 올랐고 왜 내렸는지 미리 준비한 설명 ============ */
-// 실제 실시간 뉴스가 아니라, 가격이 오르내릴 때 그럴듯한 이유를 붙여
-// '주가는 이런 이유들로 움직일 수 있다'는 걸 체험해보게 하는 학습용 가상 설명이에요.
-const REASONS = {
-  samsung:   { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'메모리 반도체 업황이 살아날 거라는 기대에 매수세가 몰렸어요.',
-               upBig:'AI 반도체 수요가 폭발적으로 늘 거란 소식에 투자자들이 앞다퉈 사들이면서 급등했어요.',
-               down:'단기간에 오른 만큼 차익을 실현하려는 매도 물량이 나왔어요.',
-               downBig:'글로벌 반도체 업황 둔화 우려가 커지면서 매도세가 몰려 급락했어요.' },
-  hynix:     { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'AI 서버용 고성능 메모리(HBM) 수요가 늘고 있다는 기대감에 매수세가 붙었어요.',
-               upBig:'주요 고객사의 대규모 메모리 반도체 주문 소식에 투자자들이 몰리며 급등했어요.',
-               down:'메모리 가격이 잠시 주춤할 수 있다는 우려에 매도세가 나왔어요.',
-               downBig:'반도체 수출 규제 관련 뉴스에 투자심리가 얼어붙으며 급락했어요.' },
-  naver:     { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'새로운 AI 서비스가 기대를 모으며 매수세가 붙었어요.',
-               upBig:'광고·커머스 실적이 예상보다 잘 나왔다는 소식에 투자자들이 몰려 급등했어요.',
-               down:'경쟁 서비스 등장 소식에 투자 심리가 다소 위축됐어요.',
-               downBig:'주요 서비스 관련 규제 우려가 커지며 매도세가 몰려 급락했어요.' },
-  kakao:     { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'플랫폼 서비스 이용자가 늘고 있다는 소식에 매수세가 붙었어요.',
-               upBig:'새 사업의 실적 기대감이 커지며 투자자들이 몰려 급등했어요.',
-               down:'광고 시장이 둔화될 수 있다는 우려에 매도세가 나왔어요.',
-               downBig:'계열사 관련 규제 이슈가 불거지며 매도세가 몰려 급락했어요.' },
-  lgen:      { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'전기차 배터리 수주 소식에 매수세가 붙었어요.',
-               upBig:'글로벌 완성차 업체와의 대규모 공급 계약 소식에 투자자들이 몰려 급등했어요.',
-               down:'전기차 수요 둔화 우려에 매도세가 나왔어요.',
-               downBig:'원자재 가격 급등과 수요 둔화가 겹치며 매도세가 몰려 급락했어요.' },
-  hyundai:   { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'신차 판매량이 늘었다는 소식에 매수세가 붙었어요.',
-               upBig:'해외 판매 실적이 예상보다 잘 나왔다는 소식에 투자자들이 몰려 급등했어요.',
-               down:'원자재 값 상승으로 수익성이 나빠질 수 있다는 우려에 매도세가 나왔어요.',
-               downBig:'주요 수출국의 관세 이슈가 불거지며 매도세가 몰려 급락했어요.' },
-  celltrion: { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'새로운 바이오 의약품 임상 소식에 매수세가 붙었어요.',
-               upBig:'신약 허가 기대감이 커지며 투자자들이 몰려 급등했어요.',
-               down:'임상 결과 발표가 늦어질 수 있다는 소식에 매도세가 나왔어요.',
-               downBig:'경쟁 제품 등장 소식에 투자심리가 얼어붙으며 급락했어요.' },
-  posco:     { flat:'특별한 소식 없이 잔잔하게 거래되고 있어요.',
-               up:'철강 제품 가격이 오르고 있다는 소식에 매수세가 붙었어요.',
-               upBig:'2차전지 소재 사업 기대감이 커지며 투자자들이 몰려 급등했어요.',
-               down:'글로벌 철강 수요가 둔화될 수 있다는 우려에 매도세가 나왔어요.',
-               downBig:'원자재 가격 부담과 업황 둔화 우려가 겹치며 매도세가 몰려 급락했어요.' }
-};
-function reasonFor(c, chg){
-  const r = REASONS[c.id];
-  if(!r) return null;
-  if(chg >= 3) return r.upBig;
-  if(chg >= 0.5) return r.up;
-  if(chg <= -3) return r.downBig;
-  if(chg <= -0.5) return r.down;
-  return r.flat;
-}
-
-function fmt(n){ return Math.round(n).toLocaleString('ko-KR'); }
-function closes(s){ return s.candles.map(k=>k.c); }
-function refPrice(s){ return s.candles[0].o; } // 표시 구간의 기준가(등락률 계산용)
-function pct(n){ return (n>=0?'+':'') + n.toFixed(2) + '%'; }
-function nowStr(){ const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0')+':'+d.getSeconds().toString().padStart(2,'0'); }
-function co(id){ return COMPANIES.find(c=>c.id===id); }
-
-function totalAsset(){
-  let v = state.cash;
-  Object.keys(state.holdings).forEach(id=>{
-    v += state.holdings[id].qty * state.stocks[id].price;
-  });
-  return v;
-}
-function roi(){
-  if(!state.company) return 0;
-  return ((totalAsset()-INIT_CAPITAL)/INIT_CAPITAL)*100;
-}
-function currentRank(){
-  const r = roi();
-  let cur = RANKS[0];
-  for(const rk of RANKS){ if(r>=rk.min) cur=rk; }
-  return cur;
-}
-function nextRank(){
-  const idx = RANKS.findIndex(r=>r.key===currentRank().key);
-  return RANKS[idx+1] || null;
-}
-
-/* ============ 가격 시뮬레이션 (캔들 기반) ============ */
-setInterval(()=>{
-  if(state.screen!=='dashboard') return;
-  COMPANIES.forEach(c=>{
-    const s = state.stocks[c.id];
-    const cur = s.candles[s.candles.length-1];
-    const vol = 0.004 + Math.random()*0.012;
-    const dir = Math.random()<0.5? -1:1;
-    let np = s.price * (1 + dir*vol);
-    np = Math.max(np, c.base*0.3);
-
-    s.tickCount++;
-    if(s.tickCount >= CANDLE_TICKS){
-      // 새 봉(캔들) 시작
-      s.tickCount = 0;
-      s.candles.push({o:cur.c, h:np, l:np, c:np, v:Math.round(200000+Math.random()*1300000)});
-      if(s.candles.length>30) s.candles.shift();
-    } else {
-      // 현재 봉 갱신
-      cur.c = np;
-      cur.h = Math.max(cur.h, np);
-      cur.l = Math.min(cur.l, np);
-      cur.v += Math.round(Math.random()*80000);
-    }
-    s.price = np;
-  });
-  // 수량/이유/날짜/게시판 글쓰기 입력창에 타이핑 중이면 전체 재렌더를 건너뛰어
-  // 입력 중인 값이 지워지거나 커서가 끊기지 않게 한다
-  const activeId = document.activeElement && document.activeElement.id;
-  const typingQty = activeId === 'qtyInput';
-  const typingAttDate = activeId === 'monthInput' || activeId === 'dayInput';
-  const typingFreeText = activeId === 'reasonInput' || activeId === 'boardDraftInput' || (activeId && activeId.indexOf('commentInput_')===0);
-  if(typingQty){
-    updateTradeSummary();
-  } else if(typingAttDate || typingFreeText){
-    // 아무것도 하지 않음: 입력 중에는 화면을 그대로 둔다
-  } else {
-    render();
-  }
-}, 2200);
-
-/* ============ 렌더 ============ */
-function render(){
-  const app = document.getElementById('app');
-  // 입력 중인 수량 인풋의 포커스/커서 위치를 재렌더 후 복원하기 위해 기억해둔다
-  const activeIsQty = document.activeElement && document.activeElement.id === 'qtyInput';
-  const selStart = activeIsQty ? document.activeElement.selectionStart : null;
-
-  if(state.screen==='landing'){
-    app.innerHTML = renderLanding();
-  } else {
-    app.innerHTML = renderTopbar() + renderScreenBody() + renderTabbar();
-  }
-  if(state.pendingCompany){
-    app.innerHTML += renderModal();
-  }
-  if(state.toast){
-    app.innerHTML += `<div class="msg-toast">${state.toast}</div>`;
-  }
-
-  if(activeIsQty){
-    const el = document.getElementById('qtyInput');
-    if(el){
-      el.focus();
-      try{ el.setSelectionRange(selStart, selStart); }catch(e){}
-    }
-  }
-}
-
-function logoStyle(c){ return `background:${c.color};`; }
-function initials(name){ return name[0]; }
-function icon(id){ return co(id).icon; }
-
-function renderLanding(){
-  return `
-  <div class="landing">
-    <div class="landing-hero">
-      <div class="landing-badge">청소년 모의투자</div>
-      <h1>대기업에 <em>입사</em>하고<br>투자를 시작하세요</h1>
-      <p class="sub">실제 돈이 아닌 가상 자본으로 안전하게 주식투자를 연습하는 경영학 시뮬레이션이에요. 회사를 골라 입사하면 축하금이 지급돼요. (시세는 실제 시장과 무관한 가상 데이터예요)</p>
-      <div class="capital-strip">
-        <div>
-          <div class="lbl">입사 축하금</div>
-          <div class="val">${fmt(INIT_CAPITAL)}원</div>
-        </div>
-        <div style="font-size:26px;">💰</div>
-      </div>
-    </div>
-    <div class="section-lbl">입사할 기업 선택</div>
-    <div class="company-grid">
-      ${COMPANIES.map(c=>`
-        <button class="company-card" onclick="openJoinModal('${c.id}')">
-          <div class="company-logo" style="${logoStyle(c)}">${icon(c.id)}</div>
-          <div class="cname">${c.name}</div>
-          <div class="csector">${c.code} · ${c.sector}</div>
-          <div class="cprice">${fmt(c.base)}원</div>
-        </button>
-      `).join('')}
-    </div>
-  </div>`;
-}
-
-function renderModal(){
-  const c = co(state.pendingCompany);
-  if(state.company && state.company===c.id && state._justJoined){
-    // 사원증 발급 화면
-    return `
-    <div class="modal-overlay">
-      <div class="modal">
-        <div class="badge-reveal">
-          <div class="id-card">
-            <div class="co">EMPLOYEE ID · ${c.name}</div>
-            <div class="logo-lg" style="${logoStyle(c)}">${icon(c.id)}</div>
-            <div class="name">나의 사원증</div>
-            <div class="role">🌱 인턴사원</div>
-            <div class="idno">NO. ${Math.floor(100000+Math.random()*899999)}</div>
-          </div>
-        </div>
-        <h3 style="margin-top:18px;">입사를 축하합니다! 🎉</h3>
-        <p>${fmt(INIT_CAPITAL)}원의 입사 축하금이<br>계좌로 지급되었어요.</p>
-        <div class="modal-actions">
-          <button class="btn btn-primary" style="flex:1" onclick="closeModalToDashboard()">투자 시작하기</button>
-        </div>
-      </div>
-    </div>`;
-  }
-  return `
-  <div class="modal-overlay">
-    <div class="modal">
-      <div class="company-logo" style="${logoStyle(c)}; margin:0 auto 14px; width:52px; height:52px; font-size:24px;">${icon(c.id)}</div>
-      <h3>${c.name}에 입사할까요?</h3>
-      <p>${c.sector} 계열 대기업이에요.<br>입사하면 ${fmt(INIT_CAPITAL)}원의 축하금이 지급되고<br>모의 주식투자를 시작할 수 있어요.</p>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal()">취소</button>
-        <button class="btn btn-primary" onclick="joinCompany('${c.id}')">입사하기</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function renderTopbar(){
-  const c = co(state.company);
-  const asset = totalAsset();
-  const r = roi();
-  const track = COMPANIES.map(cc=>{
-    const s = state.stocks[cc.id];
-    const chg = ((s.price - refPrice(s))/refPrice(s))*100;
-    const cls = chg>=0?'up':'down';
-    return `<div class="ticker-item"><span class="tname">${cc.name}</span><span class="${cls}">${fmt(s.price)} ${pct(chg)}</span></div>`;
-  }).join('');
-  // 화면은 2.2초마다 통째로 다시 그려지는데, 그때마다 티커의 CSS 애니메이션이 처음(0%)부터
-  // 다시 시작돼서 앞쪽 몇 개 종목만 보이고 나머지로 넘어가지 못했다.
-  // 실제 흐른 시간을 기준으로 음수 animation-delay를 매번 계산해 넣어주면,
-  // 다시 그려져도 애니메이션이 원래 진행되던 지점부터 이어져서 모든 종목이 순서대로 돌아간다.
-  const TICKER_CYCLE_MS = 28000;
-  const elapsed = Date.now() % TICKER_CYCLE_MS;
-  return `
-  <div class="topbar">
-    <div class="topbar-row">
-      <div class="mini-id">
-        <div class="logo-sm" style="${logoStyle(c)}">${icon(c.id)}</div>
-        <div class="who"><b>${c.name}</b><span>${currentRank().emoji} ${currentRank().name}</span></div>
-      </div>
-      <div class="asset-tag">
-        <div class="lbl">총자산</div>
-        <div class="val">${fmt(asset)}원</div>
-      </div>
-    </div>
-    <div class="ticker-wrap">
-      <div class="ticker-track" style="animation-delay:-${elapsed}ms;">${track}${track}</div>
-    </div>
-  </div>`;
-}
-
-function sparkline(hist, color){
-  const w=64,h=28, min=Math.min(...hist), max=Math.max(...hist), range=(max-min)||1;
-  const pts = hist.map((v,i)=> `${(i/(hist.length-1))*w},${h-((v-min)/range)*h}`).join(' ');
-  return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
-}
-
-function candleChart(candles){
-  const w=320, h=170, volH=36, gap=4;
-  const bodyW = Math.max(3, (w/candles.length) - gap);
-  const allHigh = Math.max(...candles.map(k=>k.h));
-  const allLow = Math.min(...candles.map(k=>k.l));
-  const range = (allHigh-allLow) || 1;
-  const maxVol = Math.max(...candles.map(k=>k.v)) || 1;
-  const priceY = v => 8 + (1 - (v-allLow)/range) * (h-16);
-
-  const grid = [0,0.5,1].map(t=>{
-    const y = 8 + t*(h-16);
-    const val = allHigh - t*range;
-    return `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#E2E8F0" stroke-width="1"/>
-      <text x="${w-2}" y="${y-3}" text-anchor="end" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">${fmt(val)}</text>`;
-  }).join('');
-
-  const bars = candles.map((k,i)=>{
-    const x = i*(bodyW+gap) + gap/2;
-    const cx = x + bodyW/2;
-    const up = k.c >= k.o;
-    const color = up ? '#E0332F' : '#0E9F4E';
-    const yHigh = priceY(k.h), yLow = priceY(k.l);
-    const yOpen = priceY(k.o), yClose = priceY(k.c);
-    const bodyTop = Math.min(yOpen,yClose), bodyBot = Math.max(yOpen,yClose);
-    const bodyH = Math.max(1.5, bodyBot-bodyTop);
-    const vBarH = (k.v/maxVol) * (volH-4);
-    return `
-      <line x1="${cx}" y1="${yHigh}" x2="${cx}" y2="${yLow}" stroke="${color}" stroke-width="1.4"/>
-      <rect x="${x}" y="${bodyTop}" width="${bodyW}" height="${bodyH}" fill="${color}" rx="1"/>
-      <rect x="${x}" y="${h+8+(volH-4-vBarH)}" width="${bodyW}" height="${vBarH}" fill="${color}" opacity="0.45" rx="1"/>
-    `;
-  }).join('');
-
-  return `<svg viewBox="0 0 ${w} ${h+volH+10}" style="width:100%; height:${h+volH+10}px;">
-    ${grid}
-    ${bars}
-    <line x1="0" y1="${h+6}" x2="${w}" y2="${h+6}" stroke="#E2E8F0" stroke-width="1"/>
-    <text x="0" y="${h+volH+8}" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">거래량</text>
-  </svg>`;
-}
-
-function renderTabbar(){
-  const tabs = [
-    {k:'home', ic:'🏠', label:'홈'},
-    {k:'market', ic:'📈', label:'시장'},
-    {k:'portfolio', ic:'💼', label:'자산'},
-    {k:'history', ic:'🧾', label:'내역'},
-    {k:'board', ic:'💬', label:'게시판'},
-    {k:'learn', ic:'📚', label:'학습'},
-    {k:'news', ic:'📰', label:'뉴스'},
-    {k:'rank', ic:'🏆', label:'랭킹'},
-  ];
-  return `<div class="tabbar">
-    ${tabs.map(t=>`<button class="tab ${state.tab===t.k?'active':''}" onclick="goTab('${t.k}')"><span class="ic">${t.ic}</span>${t.label}</button>`).join('')}
-  </div>`;
-}
-
-function renderScreenBody(){
-  if(state.tab==='home') return renderHome();
-  if(state.tab==='market'){
-    if(state.selectedStock) return renderStockDetail();
-    return renderMarket();
-  }
-  if(state.tab==='portfolio') return renderPortfolio();
-  if(state.tab==='history') return renderHistory();
-  if(state.tab==='board') return renderBoard();
-  if(state.tab==='learn') return renderLearn();
-  if(state.tab==='news') return renderNews();
-  if(state.tab==='rank') return renderRank();
-  return '';
-}
-
-function renderLearn(){
-  return `
-  <div class="screen">
-    <div class="subnav">
-      <button class="subnav-btn ${state.learnView==='quiz'?'active':''}" onclick="setLearnView('quiz')">📅 출석 퀴즈</button>
-      <button class="subnav-btn ${state.learnView==='terms'?'active':''}" onclick="setLearnView('terms')">📖 용어사전</button>
-    </div>
-    ${state.learnView==='quiz' ? renderAttendanceQuiz() : renderTermsList()}
-  </div>`;
-}
-
-function renderTermsList(){
-  return `
-    <div class="section-lbl">경제·주식 용어 사전 (${TERMS.length})</div>
-    ${TERMS.map(t=>`
-      <div class="term-card">
-        <div class="tname">${t.term}</div>
-        <div class="tdef">${t.def}</div>
-      </div>
-    `).join('')}
-  `;
-}
-
-function renderAttendanceQuiz(){
-  const {year, month, day} = state.att;
-  const key = attKey(year, month);
-  const stampedArr = state.att.stamped[key] || [];
-  const dim = daysInMonth(year, month);
-  const firstDow = firstWeekday(year, month);
-  const isTodayStamped = stampedArr.includes(day);
-  const allDone = stampedArr.length >= dim;
-
-  if(!isTodayStamped && !allDone && !state.quiz){
-    state.quiz = generateQuizObj();
-  }
-
-  const weekdayLbls = ['일','월','화','수','목','금','토'];
-  let cells = '';
-  for(let i=0;i<firstDow;i++) cells += `<div class="cal-cell empty"></div>`;
-  for(let d=1; d<=dim; d++){
-    const stamped = stampedArr.includes(d);
-    const isCur = d===day;
-    cells += `<div class="cal-cell ${stamped?'stamped':''} ${isCur?'current':''}">${stamped?'✅':d}</div>`;
-  }
-
-  return `
-    <div class="date-setter">
-      <div class="date-field"><label>이번 달(월)</label><input id="monthInput" type="number" min="1" max="12" value="${month}"></div>
-      <div class="date-field"><label>오늘(일)</label><input id="dayInput" type="number" min="1" max="${dim}" value="${day}"></div>
-      <button class="date-apply-btn" onclick="applyAttDate()">적용</button>
-    </div>
-
-    <div class="stat-box" style="margin-bottom:16px;">
-      <div class="lbl">${year}년 ${month}월 출석 현황</div>
-      <div class="val num" style="margin-top:6px;">${stampedArr.length} / ${dim}일 스탬프 완료</div>
-      <div class="bar-bg" style="margin-top:10px;"><div class="bar-fill" style="width:${(stampedArr.length/dim)*100}%"></div></div>
-      <div style="font-size:11px; color:var(--muted); margin-top:8px;">퀴즈 정답 시 하루 ${fmt(DAILY_QUIZ_REWARD)}원, 한 달 개근 시 ${fmt(MONTHLY_COMPLETE_REWARD)}원 보너스 지급 💰</div>
-    </div>
-
-    <div class="cal-grid" style="margin-bottom:8px;">
-      ${weekdayLbls.map(w=>`<div class="cal-dow">${w}</div>`).join('')}
-    </div>
-    <div class="cal-grid" style="margin-bottom:20px;">${cells}</div>
-
-    ${allDone ? `
-      <div class="complete-banner">
-        <div style="font-size:30px;">🎉</div>
-        <div style="font-weight:700; font-size:15px; margin-top:6px;">${month}월 출석을 모두 채웠어요!</div>
-        <div style="font-size:12px; color:var(--muted); margin-top:4px;">개근 보너스 ${fmt(MONTHLY_COMPLETE_REWARD)}원을 받았어요. 다음 달로 넘어가서 새로운 용어를 배워봐요.</div>
-        <button class="btn btn-primary" style="margin-top:14px; width:100%;" onclick="nextAttMonth()">다음 달로 이동 →</button>
-      </div>
-    ` : isTodayStamped ? `
-      <div class="complete-banner">
-        <div style="font-size:26px;">✅</div>
-        <div style="font-weight:700; font-size:14.5px; margin-top:6px;">오늘의 출석을 완료했어요!</div>
-        <div style="font-size:12px; color:var(--muted); margin-top:4px;">내일 다시 와서 스탬프를 찍어보세요.</div>
-        <button class="btn btn-ghost" style="margin-top:14px; width:100%;" onclick="advanceDemoDay()">다음 날짜 체험해보기 (테스트용)</button>
-      </div>
-    ` : renderQuizCard()}
-  `;
-}
-
-function renderQuizCard(){
-  const q = state.quiz;
-  if(!q) return '';
-  return `
-    <div class="quiz-card">
-      <div class="quiz-q">🤔 이 설명에 해당하는 용어는 무엇일까요?<br><span style="color:var(--muted); font-weight:500; font-size:13px;">${q.defText}</span></div>
-      ${q.choices.map((ch,i)=>{
-        let cls = '';
-        if(q.answered && i===q.correctIdx) cls = 'correct';
-        if(q.wrongIdx===i) cls = 'wrong';
-        return `<button class="quiz-choice ${cls}" onclick="selectQuizAnswer(${i})" ${q.answered?'disabled':''}>${ch.term}</button>`;
-      }).join('')}
-      ${q.answered ? `<div style="text-align:center; color:var(--mint); font-weight:700; font-size:13px; margin-top:6px;">정답이에요! 오늘 스탬프 획득 🎉</div>` : ''}
-    </div>
-  `;
-}
-
-function renderNews(){
-  return `
-    <div class="screen">
-      <div class="news-disclaimer">📌 아래 뉴스는 2026년 8월 기준 실제 경제 뉴스를 요약한 내용이며 실시간으로 갱신되지 않아요. 'AI로 쉽게 설명' 버튼을 누르면 어려운 경제 용어를 풀어서 더 쉬운 말로 설명해줘요.</div>
-      ${NEWS.map(n=>{
-        const ai = state.newsAI[n.id];
-        let out = '';
-        if(ai && ai.status==='loading'){
-          out = `<div class="ai-out"><span class="ai-loading">🤖 AI가 쉬운 말로 풀어서 설명하는 중...</span></div>`;
-        } else if(ai && ai.status==='done'){
-          out = `<div class="ai-out"><div class="ai-badge">🤖 AI 쉬운 요약</div><div class="ai-text">${escapeHtml(ai.text)}</div></div>`;
-        } else if(ai && ai.status==='error'){
-          out = `<div class="ai-out"><span class="ai-error">요약을 가져오지 못했어요. 다시 시도해주세요.</span></div>`;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작전고 급식콕 - 인천 작전고등학교 실시간 급식 혼잡도 & 식단</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Pretendard -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f3f4f6;
+            touch-action: manipulation;
         }
-        return `
-        <div class="news-card">
-          <div class="news-meta">${n.source} · ${n.date}</div>
-          <div class="news-title">${n.title}</div>
-          <div class="news-body">${n.body}</div>
-          <button id="sumBtn_${n.id}" class="ai-btn" onclick="summarizeNews('${n.id}')" ${ai && ai.status==='loading' ? 'disabled':''}>🤖 AI로 쉽게 설명해줘</button>
-          ${out}
-        </div>`;
-      }).join('')}
-    </div>
-  `;
-}
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fdba74;
+            border-radius: 4px;
+        }
+        .fade-in {
+            animation: fadeIn 0.25s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen p-0 sm:p-4">
 
-function renderBoard(){
-  const posts = state.board.slice().reverse();
-  return `
-  <div class="screen">
-    <div class="news-disclaimer">💬 서로 어떤 종목을 왜 샀는지 나눠보는 공간이에요. 매수·매도할 때 적은 이유가 자동으로 올라오고, 자유롭게 글도 쓸 수 있어요. 지금은 내 화면 안에서만 저장되는 데모예요 — 다른 사람 기기와 실시간으로 이어주려면 별도의 서버 연결이 필요해요.</div>
-    <div class="board-compose">
-      <textarea id="boardDraftInput" placeholder="오늘의 투자 생각을 나눠보세요" oninput="setBoardDraft(this.value)">${escapeHtml(state.boardDraft||'')}</textarea>
-      <button class="board-compose-btn" onclick="postBoardDraft()">✍️ 글 올리기</button>
-    </div>
-    ${posts.length===0 ? `<div class="empty-note">아직 올라온 글이 없어요.<br>매수·매도를 하거나 투자 생각을 직접 적어보세요.</div>` :
-      posts.map(p=>renderBoardPost(p)).join('')}
-  </div>`;
-}
+    <!-- Mobile Device Container Frame -->
+    <div class="w-full max-w-md bg-white shadow-2xl rounded-none sm:rounded-3xl flex flex-col h-screen sm:h-[880px] overflow-hidden relative border border-gray-200">
+        
+        <!-- Top Header Bar with Single Secure Admin Button -->
+        <header class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-4 flex items-center justify-between shadow-md z-20">
+            <div class="flex items-center space-x-3">
+                <!-- App Logo matching the orange lunchbox location icon -->
+                <div class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-md text-orange-500 font-bold text-xl relative overflow-hidden flex-shrink-0">
+                    <i class="fa-solid fa-utensils"></i>
+                    <div class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="bg-white/25 text-[10px] font-bold px-2 py-0.5 rounded-md">인천 작전고등학교</span>
+                    </div>
+                    <h1 class="font-extrabold text-lg tracking-tight leading-tight mt-0.5">작전고 급식콕</h1>
+                </div>
+            </div>
+            <!-- Single Top Admin Button -->
+            <button onclick="openPasswordModal()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-2 rounded-xl font-bold transition flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-lock text-[11px]"></i>
+                <span>도우미 수정</span>
+            </button>
+        </header>
 
-function renderBoardPost(p){
-  const c = p.companyId ? co(p.companyId) : null;
-  const tagHtml = p.type ? `<div class="bp-tag" style="background:${p.type==='buy'?'rgba(224,51,47,.12)':'rgba(14,159,78,.12)'}; color:${p.type==='buy'?'var(--up)':'var(--down)'};">${p.type==='buy'?'매수':'매도'} · ${p.stockName} ${p.qty}주 · ${fmt(p.price)}원</div>` : '';
-  return `
-    <div class="board-post">
-      <div class="bp-head">
-        ${c ? `<div class="logo-xs" style="${logoStyle(c)}; width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#0B1120;">${icon(c.id)}</div>` : `<div class="logo-xs" style="background:var(--surface-2); width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px;">🙂</div>`}
-        <div class="bp-who">나</div>
-        <div class="bp-time">${p.time}</div>
-      </div>
-      ${tagHtml}
-      <div class="bp-text">${escapeHtml(p.reason||p.text||'')}</div>
-      <div class="bp-comments">
-        ${(p.comments||[]).map(cm=>`<div class="bp-comment"><b>나</b> ${escapeHtml(cm)}</div>`).join('')}
-        <div class="bp-comment-row">
-          <input id="commentInput_${p.id}" type="text" placeholder="댓글 달기">
-          <button onclick="addBoardComment('${p.id}')">등록</button>
+        <!-- Main Scrollable Content Area -->
+        <main id="main-content" class="flex-1 overflow-y-auto pb-24 bg-gray-50 relative">
+            
+            <!-- ================= TAB 1: 실시간 현황 (STATUS / HOME) ================= -->
+            <div id="tab-status" class="p-5 space-y-5 fade-in">
+                <!-- 학년 이동 안내 (도우미가 '이동 시작'을 누르면 크게 표시) -->
+                <div id="move-alert" class="hidden"></div>
+
+                <!-- Welcome Banner Card -->
+                <div class="bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm" id="current-date-badge">2026년 10월 27일 (화)</span>
+                        <span class="flex items-center text-xs bg-emerald-500 text-white px-2.5 py-1 rounded-full font-bold shadow-sm">
+                            <span class="w-2 h-2 bg-white rounded-full animate-ping mr-1.5"></span> LIVE 실시간
+                        </span>
+                    </div>
+                    <h2 class="text-2xl font-extrabold mb-1">작전고 식사 시간!</h2>
+                    <p class="text-orange-100 text-sm mb-4">기다림 없는 스마트 급식 가이드</p>
+                    
+                    <!-- Quick Live Status Summary inside Banner -->
+                    <div class="bg-white/15 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/20 shadow-inner">
+                        <div class="flex items-center space-x-3.5">
+                            <div class="w-11 h-11 rounded-2xl bg-amber-400 text-white flex items-center justify-center font-bold text-xl shadow" id="home-status-emoji">
+                                🟡
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-orange-200 font-medium">현재 작전고 급식실 대기 상황</div>
+                                <div class="font-extrabold text-base text-white" id="home-status-text">보통 (대기 6~10분)</div>
+                            </div>
+                        </div>
+                        <span class="text-xs bg-white/25 px-2.5 py-1 rounded-xl font-bold whitespace-nowrap flex-shrink-0" id="update-timestamp-badge">13시 05분 기준</span>
+                    </div>
+                </div>
+
+                <!-- Overall Congestion Status Banner (Clean display, NO edit button inside) -->
+                <div id="congestion-banner" class="bg-amber-500 text-white rounded-3xl p-5 shadow-md flex items-center justify-between">
+                    <div class="flex items-center space-x-3.5">
+                        <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm" id="status-banner-emoji">
+                            🟡
+                        </div>
+                        <div>
+                            <span class="text-[10px] bg-white/25 px-2.5 py-0.5 rounded-full font-bold uppercase" id="status-banner-badge">보통 상태</span>
+                            <h3 class="font-extrabold text-base mt-1" id="status-banner-title">대기 6 ~ 10분 소요</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade-by-grade Status Cards -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center px-1">
+                        <div class="flex items-center space-x-2 text-xs font-bold text-gray-700">
+                            <i class="fa-solid fa-layer-group text-orange-500"></i>
+                            <span>작전고 학년별 실시간 식사 상태</span>
+                        </div>
+                        <span class="text-[11px] text-gray-400">3학년 ➔ 2학년 ➔ 1학년 순</span>
+                    </div>
+
+                    <!-- 3rd Grade Card -->
+                    <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center font-extrabold text-sm shadow-sm flex-shrink-0">
+                                3학년
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-sm" id="display-g3-title">3학년 우선 배식시간</h4>
+                                <p class="text-[11px] text-gray-500 mt-0.5" id="display-g3-desc">현재 식사 진행 중 (대기 없음)</p>
+                            </div>
+                        </div>
+                        <span id="display-g3-badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex-shrink-0">
+                            식사중 🍽️
+                        </span>
+                    </div>
+
+                    <!-- 2nd Grade Card -->
+                    <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-extrabold text-sm shadow-sm flex-shrink-0">
+                                2학년
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-sm" id="display-g2-title">2학년 순차 이동</h4>
+                                <p class="text-[11px] text-gray-500 mt-0.5" id="display-g2-desc">예상 대기: 약 30분 소요</p>
+                            </div>
+                        </div>
+                        <span id="display-g2-badge" class="bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex-shrink-0">
+                            이동대기 ⏳
+                        </span>
+                    </div>
+
+                    <!-- 1st Grade Card -->
+                    <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center font-extrabold text-sm shadow-sm flex-shrink-0">
+                                1학년
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-sm" id="display-g1-title">1학년 교실 대기</h4>
+                                <p class="text-[11px] text-gray-500 mt-0.5" id="display-g1-desc">순서 대기 중 (다음 차례)</p>
+                            </div>
+                        </div>
+                        <span id="display-g1-badge" class="bg-gray-200 text-gray-600 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex-shrink-0">
+                            교실대기 🔒
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Notice / Eating Order Guide Card -->
+                <div class="bg-blue-50 border border-blue-100 rounded-3xl p-4 flex items-start space-x-3 text-blue-900 shadow-sm">
+                    <div class="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs shadow-sm">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-xs">작전고 급식실 이용 안내</h4>
+                        <p class="text-[11px] text-blue-700 mt-1 leading-relaxed">
+                            급식도우미가 실시간으로 갱신하는 학년별 상태를 확인하고 이동해 주세요. 질서 있는 배식을 위해 협조해 주셔서 감사합니다!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 2: 이달의 급식 (MENU) ================= -->
+            <div id="tab-menu" class="p-5 space-y-5 hidden fade-in">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-gray-900">작전고 이달의 식단표</h2>
+                        <p class="text-xs text-gray-500">인천 작전고등학교 11월 실제 급식 식단</p>
+                    </div>
+                    <div class="bg-orange-100 text-orange-700 text-xs px-3 py-1.5 rounded-xl font-bold shadow-sm">
+                        2026년 11월
+                    </div>
+                </div>
+
+                <!-- Date Selector Filter Chips (Nov 2026, JS가 생성) -->
+                <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-none" id="menu-date-chips">
+                </div>
+
+                <!-- Selected Menu Detail Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                        <h3 class="font-bold text-gray-900 text-base" id="selected-menu-date-title">11월 3일 (화) 작전고 식단</h3>
+                        <span class="text-xs bg-orange-100 text-orange-600 px-3 py-1 rounded-full font-bold shadow-sm" id="selected-menu-kcal">890 kcal</span>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 shadow-sm">🍚</div>
+                            <div>
+                                <span class="text-[11px] text-gray-400 font-medium">주식 (밥/면)</span>
+                                <p class="font-bold text-gray-800 text-sm mt-0.5" id="menu-rice">보리밥</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 shadow-sm">🍲</div>
+                            <div>
+                                <span class="text-[11px] text-gray-400 font-medium">국물</span>
+                                <p class="font-bold text-gray-800 text-sm mt-0.5" id="menu-soup">낙지연포탕</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 shadow-sm">🍗</div>
+                            <div>
+                                <span class="text-[11px] text-gray-400 font-medium">메인 및 반찬 / 후식</span>
+                                <p class="font-bold text-gray-800 text-sm mt-0.5" id="menu-sides">단짠할라피뇨치킨, 깍두기, 자두쥬스</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-2xl p-3.5 text-[11px] text-gray-500 flex items-center justify-between border border-gray-100">
+                        <span id="menu-allergy">알레르기 정보</span>
+                        <button onclick="showToast('작전고 식단이 저장되었습니다!')" class="text-orange-500 font-bold hover:underline flex items-center space-x-1">
+                            <i class="fa-regular fa-star"></i> <span>저장</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Weekly Menu List Overview -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-3">
+                    <h3 class="font-bold text-gray-800 text-sm">작전고 11월 식단표</h3>
+                    <div class="divide-y divide-gray-100 text-xs" id="menu-list"></div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 3: 급식도우미 관리자 모드 (ADMIN) ================= -->
+            <div id="tab-admin" class="p-5 space-y-5 hidden fade-in">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-gray-900">작전고 도우미 제어판</h2>
+                        <p class="text-xs text-gray-500">버튼을 누르면 바로 홈 화면에 반영돼요</p>
+                    </div>
+                    <button onclick="switchTab('status')" class="bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-xl font-bold hover:bg-gray-300 transition">
+                        나가기 ✕
+                    </button>
+                </div>
+
+                <!-- 전체 혼잡도 버튼 -->
+                <div class="bg-orange-50 border border-orange-200 rounded-3xl p-4 space-y-3 shadow-sm">
+                    <div class="font-bold text-orange-900 text-sm">
+                        <i class="fa-solid fa-gauge-high mr-1.5 text-orange-600"></i> 급식실 전체 혼잡도
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5" id="admin-congestion-buttons"></div>
+                </div>
+
+                <!-- 학년별 상태 버튼 (JS가 생성) -->
+                <div class="space-y-4" id="admin-grade-sections"></div>
+
+                <p class="text-[11px] text-gray-400 text-center pb-2">누르는 즉시 저장되고 홈 화면에 표시돼요</p>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation Bar (Tabs: 실시간 현황, 이달의 급식) -->
+        <nav class="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-12 py-3 flex justify-around items-center z-20 shadow-lg">
+            <button onclick="switchTab('status')" id="nav-status" class="flex flex-col items-center text-orange-500 transition">
+                <i class="fa-solid fa-users-viewfinder text-base mb-1"></i>
+                <span class="text-[10px] font-bold">실시간 현황</span>
+            </button>
+            <button onclick="switchTab('menu')" id="nav-menu" class="flex flex-col items-center text-gray-400 hover:text-gray-600 transition">
+                <i class="fa-solid fa-calendar-days text-base mb-1"></i>
+                <span class="text-[10px] font-medium">이달의 급식</span>
+            </button>
+        </nav>
+
+        <!-- PASSWORD MODAL POPUP (Masked type="password") -->
+        <div id="password-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl space-y-4 transform scale-95 transition-transform duration-300" id="password-modal-content">
+                <div class="text-center space-y-1.5">
+                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl mx-auto flex items-center justify-center text-xl font-bold shadow-inner">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <h3 class="font-extrabold text-gray-900 text-base">도우미 관리자 인증</h3>
+                    <p class="text-[11px] text-gray-500">급식실 도우미 비밀번호를 입력해주세요</p>
+                </div>
+
+                <div>
+                    <!-- type="password" ensures masked bullets (••••) -->
+                    <input type="password" id="admin-password-input" onkeydown="if (event.key === 'Enter') { event.preventDefault(); verifyAdminPassword(); }" placeholder="비밀번호를 입력하세요" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-xs text-center font-bold tracking-widest focus:outline-none focus:border-orange-500 shadow-sm">
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="closePasswordModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-3 rounded-2xl text-xs font-bold transition">
+                        취소
+                    </button>
+                    <button onclick="verifyAdminPassword()" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-2xl text-xs font-bold shadow-md transition">
+                        확인
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  `;
-}
 
-function renderHome(){
-  const asset = totalAsset();
-  const r = roi();
-  const cls = r>0.001?'up':(r<-0.001?'down':'flat');
-  const nr = nextRank();
-  const cr = currentRank();
-  let progress = 100;
-  if(nr){
-    const span = nr.min - cr.min;
-    progress = Math.min(100, Math.max(0, ((r - cr.min)/span)*100));
-  }
-  const holdIds = Object.keys(state.holdings).filter(id=>state.holdings[id].qty>0);
-  return `
-  <div class="screen">
-    <div class="hero-card">
-      <div class="lbl">나의 총자산</div>
-      <div class="total num">${fmt(asset)}원</div>
-      <div class="change ${cls}">${pct(r)} · ${r>=0?'수익':'손실'} ${fmt(Math.abs(asset-INIT_CAPITAL))}원</div>
-      <div class="rank-progress">
-        <div class="rr"><span>${cr.emoji} ${cr.name}</span><span>${nr? nr.emoji+' '+nr.name : '최고 등급'}</span></div>
-        <div class="bar-bg"><div class="bar-fill" style="width:${progress}%"></div></div>
-      </div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="lbl">보유 현금</div><div class="val num">${fmt(state.cash)}원</div></div>
-      <div class="stat-box"><div class="lbl">투자 원금</div><div class="val num">${fmt(INIT_CAPITAL)}원</div></div>
-    </div>
-    <div class="section-lbl">보유 종목</div>
-    ${holdIds.length===0? `<div class="empty-note">아직 보유한 종목이 없어요.<br>시장 탭에서 첫 투자를 시작해보세요.</div>` :
-      holdIds.map(id=>{
-        const c = co(id); const h = state.holdings[id]; const cur = state.stocks[id].price;
-        const pl = (cur-h.avg)*h.qty; const plPct = ((cur-h.avg)/h.avg)*100;
-        const cls2 = pl>=0?'up':'down';
-        return `<div class="holding-mini" onclick="openStock('${id}')">
-          <div class="left"><div class="logo-xs" style="${logoStyle(c)}">${icon(c.id)}</div>
-          <div><div class="nm">${c.name}</div><div class="qty">${h.qty}주 · 평균 ${fmt(h.avg)}원</div></div></div>
-          <div class="right"><div class="pl ${cls2}">${pl>=0?'+':''}${fmt(pl)}원</div><div class="pl ${cls2}" style="font-size:10.5px;">${pct(plPct)}</div></div>
-        </div>`;
-      }).join('')
-    }
-  </div>`;
-}
-
-function renderMarket(){
-  return `
-  <div class="screen">
-    <div class="section-lbl">전체 종목</div>
-    ${COMPANIES.map(c=>{
-      const s = state.stocks[c.id];
-      const chg = ((s.price - refPrice(s))/refPrice(s))*100;
-      const cls = chg>=0?'up':'down';
-      return `<button class="stock-row" style="width:100%; text-align:left;" onclick="openStock('${c.id}')">
-        <div class="left">
-          <div class="logo-xs" style="${logoStyle(c)}; width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:15px; color:#0B1120;">${icon(c.id)}</div>
-          <div class="info"><div class="nm">${c.name}</div><div class="sec">${c.code} · ${c.sector}</div></div>
+        <!-- Custom Toast Notification Box (No alert usage) -->
+        <div id="toast-box" class="absolute top-16 left-1/2 transform -translate-x-1/2 bg-gray-900/95 text-white text-xs px-4.5 py-2.5 rounded-2xl shadow-xl z-50 transition-all duration-300 opacity-0 pointer-events-none flex items-center space-x-2 border border-gray-700">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span id="toast-message">알림 메시지</span>
         </div>
-        ${sparkline(closes(s), chg>=0?'#E0332F':'#0E9F4E')}
-        <div class="right">
-          <div class="price num">${fmt(s.price)}원</div>
-          <div class="chg num ${cls}">${pct(chg)}</div>
-        </div>
-      </button>`;
-    }).join('')}
-  </div>`;
-}
 
-function renderStockDetail(){
-  const c = co(state.selectedStock);
-  const s = state.stocks[c.id];
-  const chg = ((s.price - refPrice(s))/refPrice(s))*100;
-  const cls = chg>=0?'up':'down';
-  const h = state.holdings[c.id] || {qty:0, avg:0};
-  const cost = state.tradeQty * s.price;
-  const hasReason = (state.tradeReason||'').trim().length>0;
-  const canBuy = state.cash >= cost && state.tradeQty<=MAX_QTY && hasReason;
-  const canSell = h.qty >= state.tradeQty && hasReason;
-  const cur = s.candles[s.candles.length-1];
-  const marketCap = (s.price * c.shares / 1000000).toFixed(1); // 조원 (shares 단위: 백만주)
-  const periodHigh = Math.max(...s.candles.map(k=>k.h));
-  const periodLow = Math.min(...s.candles.map(k=>k.l));
-  return `
-  <div class="screen">
-    <div class="detail-head">
-      <button class="back-btn" onclick="closeStock()">←</button>
-      <div class="logo-xs" style="${logoStyle(c)}; width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:16px; color:#0B1120;">${icon(c.id)}</div>
-      <div><div style="font-weight:700; font-size:14.5px;">${c.name} <span style="color:var(--faint); font-weight:500; font-size:11px;">${c.code}</span></div><div style="font-size:11px; color:var(--muted);">${c.sector}</div></div>
-    </div>
-    <div class="detail-price num">${fmt(s.price)}원</div>
-    <div class="num ${cls}" style="font-size:13px; font-weight:700;">${chg>=0?'▲':'▼'} ${fmt(Math.abs(s.price-refPrice(s)))} (${pct(chg)})</div>
-    <div class="ai-out" style="margin-top:12px;">
-      <div class="ai-badge">💡 왜 이렇게 움직였을까?</div>
-      <div class="ai-text">${reasonFor(c, chg)}</div>
-    </div>
-    <div class="chart-box" style="margin-top:14px;">${candleChart(s.candles)}</div>
-
-    <div class="stat-row">
-      <div class="stat-box"><div class="lbl">시가총액</div><div class="val num">${marketCap}조원</div></div>
-      <div class="stat-box"><div class="lbl">PER</div><div class="val num">${c.per}배</div></div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="lbl">최고가</div><div class="val num up">${fmt(periodHigh)}원</div></div>
-      <div class="stat-box"><div class="lbl">최저가</div><div class="val num down">${fmt(periodLow)}원</div></div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="lbl">거래량</div><div class="val num">${fmt(cur.v)}주</div></div>
-      <div class="stat-box"><div class="lbl">발행주식수</div><div class="val num">${fmt(c.shares)}백만주</div></div>
     </div>
 
-    ${h.qty>0 ? `<div class="stat-row">
-      <div class="stat-box"><div class="lbl">보유 수량</div><div class="val num">${h.qty}주</div></div>
-      <div class="stat-box"><div class="lbl">평균 매입가</div><div class="val num">${fmt(h.avg)}원</div></div>
-    </div>` : ''}
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default Data Structure for Jakjeon High School
+        let appData = {
+            congestionKey: "yellow",
+            g3Preset: "eating",
+            g2Preset: "waiting",
+            g1Preset: "waiting",
+            updateTimeStr: "13시 05분 기준"
+        };
 
-    <div class="trade-panel">
-      <div class="trade-tabs">
-        <button class="ttab ${state.tradeMode==='buy'?'on-buy':''}" onclick="setTradeMode('buy')">매수</button>
-        <button class="ttab ${state.tradeMode==='sell'?'on-sell':''}" onclick="setTradeMode('sell')">매도</button>
-      </div>
-      <div class="qty-row">
-        <button class="qty-btn" onclick="changeQty(-1)">−</button>
-        <input id="qtyInput" class="qty-input" type="text" inputmode="numeric" pattern="[0-9]*" value="${state.tradeQtyInput!==null ? state.tradeQtyInput : state.tradeQty}" oninput="setQty(this.value)" onblur="blurQty()" onfocus="this.select()">
-        <button class="qty-btn" onclick="changeQty(1)">＋</button>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:11px; color:var(--muted); font-weight:600; display:block; margin-bottom:6px;">${state.tradeMode==='buy'?'왜 매수하나요? 이유를 적어야 매수할 수 있어요':'왜 매도하나요? 이유를 적어야 매도할 수 있어요'}</label>
-        <textarea id="reasonInput" class="qty-input" style="width:100%; text-align:left; min-height:56px; resize:vertical; line-height:1.5;" placeholder="${state.tradeMode==='buy'?'예) HBM 수요 증가 뉴스를 보고 성장성이 기대돼서 매수해요':'예) 목표 수익률에 도달해서 이익을 실현하려고 매도해요'}" oninput="setTradeReason(this.value)">${escapeHtml(state.tradeReason||'')}</textarea>
-      </div>
-      <div class="trade-summary">
-        <span>${state.tradeMode==='buy'?'매수 금액':'매도 금액'}</span>
-        <b id="tradeCostVal">${fmt(cost)}원</b>
-      </div>
-      ${state.tradeMode==='buy' ? `
-        <button id="confirmBtn" class="confirm-btn" style="background:var(--up); ${canBuy?'':'opacity:.4'}" onclick="doTrade('buy')" ${canBuy?'':'disabled'}>
-          ${!hasReason ? '매수 이유를 적어주세요' : (canBuy? '매수하기' : '현금이 부족해요')}
-        </button>` : `
-        <button id="confirmBtn" class="confirm-btn" style="background:var(--down); ${canSell?'':'opacity:.4'}" onclick="doTrade('sell')" ${canSell?'':'disabled'}>
-          ${!hasReason ? '매도 이유를 적어주세요' : (canSell? '매도하기' : '보유 수량이 부족해요')}
-        </button>`}
-    </div>
-  </div>`;
-}
+        // Preset Configurations for Grades (교실대기 → 이동시작 → 식사중 → 식사완료)
+        const gradePresets = {
+            g3: {
+                waiting: { title: "3학년 교실 대기", desc: "순서 대기 중 (다음 차례)", badgeText: "교실대기 🔒", theme: "gray" },
+                moving: { title: "3학년 이동 시작", desc: "급식실로 이동해 주세요", badgeText: "이동시작 🏃", theme: "amber" },
+                eating: { title: "3학년 우선 배식시간", desc: "현재 식사 진행 중 (대기 없음)", badgeText: "식사중 🍽️", theme: "emerald" },
+                done: { title: "3학년 식사 완료", desc: "식사가 완료되어 교실로 복귀 중", badgeText: "식사완료 👍", theme: "gray" }
+            },
+            g2: {
+                waiting: { title: "2학년 교실 대기", desc: "순서 대기 중 (다음 차례)", badgeText: "교실대기 🔒", theme: "gray" },
+                moving: { title: "2학년 이동 시작", desc: "급식실로 이동해 주세요", badgeText: "이동시작 🏃", theme: "amber" },
+                eating: { title: "2학년 식사 진행 중", desc: "현재 맛있게 식사하는 중입니다", badgeText: "식사중 🍽️", theme: "emerald" },
+                done: { title: "2학년 식사 완료", desc: "식사가 완료되어 교실로 복귀 중", badgeText: "식사완료 👍", theme: "gray" }
+            },
+            g1: {
+                waiting: { title: "1학년 교실 대기", desc: "순서 대기 중 (다음 차례)", badgeText: "교실대기 🔒", theme: "gray" },
+                moving: { title: "1학년 이동 시작", desc: "급식실로 이동해 주세요", badgeText: "이동시작 🏃", theme: "amber" },
+                eating: { title: "1학년 식사 진행 중", desc: "현재 식사 중입니다", badgeText: "식사중 🍽️", theme: "emerald" },
+                done: { title: "1학년 식사 완료", desc: "식사가 완료되어 교실로 복귀 중", badgeText: "식사완료 👍", theme: "gray" }
+            }
+        };
 
-function renderPortfolio(){
-  const holdIds = Object.keys(state.holdings).filter(id=>state.holdings[id].qty>0);
-  const asset = totalAsset();
-  return `
-  <div class="screen">
-    <div class="stat-row">
-      <div class="stat-box"><div class="lbl">총자산</div><div class="val num">${fmt(asset)}원</div></div>
-      <div class="stat-box"><div class="lbl">현금 비중</div><div class="val num">${((state.cash/asset)*100).toFixed(1)}%</div></div>
-    </div>
-    <div class="section-lbl">보유 종목 (${holdIds.length})</div>
-    ${holdIds.length===0? `<div class="empty-note">보유 종목이 없어요.</div>` :
-      holdIds.map(id=>{
-        const c = co(id); const h = state.holdings[id]; const cur = state.stocks[id].price;
-        const evalV = h.qty*cur; const pl = evalV - h.qty*h.avg; const plPct = ((cur-h.avg)/h.avg)*100;
-        const cls2 = pl>=0?'up':'down';
-        return `<button class="stock-row" style="width:100%; text-align:left; display:flex;" onclick="openStock('${id}')">
-          <div class="left">
-            <div class="logo-xs" style="${logoStyle(c)}; width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:15px; color:#0B1120;">${icon(c.id)}</div>
-            <div class="info"><div class="nm">${c.name}</div><div class="sec">${h.qty}주 · 평단 ${fmt(h.avg)}원</div></div>
-          </div>
-          <div class="right">
-            <div class="price num">${fmt(evalV)}원</div>
-            <div class="chg num ${cls2}">${pl>=0?'+':''}${fmt(pl)}원 (${pct(plPct)})</div>
-          </div>
-        </button>`;
-      }).join('')
-    }
-  </div>`;
-}
+        // Load from localStorage if available
+        function loadAppData() {
+            const saved = localStorage.getItem('jakjeon_gubsik_app_data_v6');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch(e) { console.error(e); }
+            }
+            renderAppData();
+        }
 
-function renderHistory(){
-  return `
-  <div class="screen">
-    <div class="section-lbl">거래내역 (${state.tx.length})</div>
-    ${state.tx.length===0? `<div class="empty-note">거래내역이 없어요.</div>` :
-      state.tx.slice().reverse().map(t=>`
-        <div class="tx-row">
-          <div>
-            <span class="tag ${t.type==='buy'?'tag-buy':'tag-sell'}">${t.type==='buy'?'매수':'매도'}</span>
-            <span class="nm">${t.name}</span>
-            <div class="meta">${t.qty}주 · ${t.time}</div>
-            ${t.reason ? `<div class="reason">💬 ${escapeHtml(t.reason)}</div>` : ''}
-          </div>
-          <div class="amt num">${t.type==='buy'?'-':'+'}${fmt(t.amount)}원</div>
-        </div>
-      `).join('')
-    }
-  </div>`;
-}
+        // Render Data to UI
+        function renderAppData() {
+            let cState = { emoji: "🟡", badge: "보통 상태", title: "대기 6 ~ 10분 소요", colorClass: "bg-amber-500" };
+            if (appData.congestionKey === 'green') cState = { emoji: "🟢", badge: "여유 상태", title: "대기 2 ~ 5분 소요", colorClass: "bg-emerald-500" };
+            else if (appData.congestionKey === 'yellow') cState = { emoji: "🟡", badge: "보통 상태", title: "대기 6 ~ 10분 소요", colorClass: "bg-amber-500" };
+            else if (appData.congestionKey === 'orange') cState = { emoji: "🟠", badge: "혼잡 상태", title: "대기 11 ~ 20분 소요", colorClass: "bg-orange-600" };
+            else if (appData.congestionKey === 'red') cState = { emoji: "🔴", badge: "매우 혼잡", title: "대기 21분 이상 지연", colorClass: "bg-rose-600" };
 
-function renderRank(){
-  const cr = currentRank();
-  const r = roi();
-  const c = co(state.company);
-  const myEntry = {name:'나 ('+c.name+')', roi:r, me:true};
-  const board = [...BOTS, myEntry].sort((a,b)=>b.roi-a.roi);
-  return `
-  <div class="screen">
-    <div class="rank-hero">
-      <div class="logo-lg" style="${logoStyle(c)}; margin:0 auto 12px; width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:24px;">${cr.emoji}</div>
-      <div class="title">${cr.name}</div>
-      <div class="desc">수익률 ${pct(r)} · ${c.name}</div>
-    </div>
-    <div class="section-lbl">승진 사다리</div>
-    <div class="ladder">
-      ${RANKS.slice().reverse().map(rk=>`
-        <div class="ladder-item ${rk.key===cr.key?'current':''}">
-          <div class="lv-ic">${rk.emoji}</div>
-          <div><div class="lv-name">${rk.name}</div><div class="lv-req">수익률 ${rk.min}% 이상</div></div>
-        </div>
-      `).join('')}
-    </div>
-    <div class="section-lbl">모의 리더보드</div>
-    <div class="leader-list">
-      ${board.map((b,i)=>`
-        <div class="leader-row ${b.me?'me':''}">
-          <div class="lrank">${i+1}</div>
-          <div class="lname">${b.name}</div>
-          <div class="lval num ${b.roi>=0?'up':'down'}">${pct(b.roi)}</div>
-        </div>
-      `).join('')}
-    </div>
-  </div>`;
-}
+            // Render Banner
+            const banner = document.getElementById('congestion-banner');
+            if (banner) banner.className = `${cState.colorClass} text-white rounded-3xl p-5 shadow-md flex items-center justify-between`;
+            
+            const bannerEmoji = document.getElementById('status-banner-emoji');
+            if (bannerEmoji) bannerEmoji.innerText = cState.emoji;
+            
+            const bannerBadge = document.getElementById('status-banner-badge');
+            if (bannerBadge) bannerBadge.innerText = cState.badge;
+            
+            const bannerTitle = document.getElementById('status-banner-title');
+            if (bannerTitle) bannerTitle.innerText = cState.title;
 
-/* ============ 액션 ============ */
-let _boardIdSeq = 1;
-function addBoardPost(p){
-  state.board.push(Object.assign({ id:'p'+(_boardIdSeq++), time:nowStr(), comments:[] }, p));
-}
-function setBoardDraft(v){
-  state.boardDraft = v;
-}
-function postBoardDraft(){
-  const text = (state.boardDraft||'').trim();
-  if(!text) return;
-  addBoardPost({ text });
-  state.boardDraft = '';
-  render();
-}
-function addBoardComment(postId){
-  const el = document.getElementById('commentInput_'+postId);
-  if(!el) return;
-  const text = el.value.trim();
-  if(!text) return;
-  const post = state.board.find(p=>p.id===postId);
-  if(!post) return;
-  if(!post.comments) post.comments = [];
-  post.comments.push(text);
-  render();
-}
-function openJoinModal(id){ state.pendingCompany = id; state._justJoined=false; render(); }
-function closeModal(){ state.pendingCompany=null; render(); }
-function joinCompany(id){
-  state.company = id;
-  state.cash = INIT_CAPITAL;
-  state._justJoined = true;
-  render();
-}
-function closeModalToDashboard(){
-  state.pendingCompany=null;
-  state.screen='dashboard';
-  state.tab='home';
-  render();
-}
-function goTab(t){ state.tab=t; state.selectedStock=null; render(); }
+            const homeEmoji = document.getElementById('home-status-emoji');
+            if (homeEmoji) homeEmoji.innerText = cState.emoji;
 
-/* ============ 학습 탭: 출석 스탬프 & 퀴즈 ============ */
-function setLearnView(v){ state.learnView=v; render(); }
+            const homeText = document.getElementById('home-status-text');
+            if (homeText) homeText.innerText = `${cState.badge} (${cState.title})`;
 
-function daysInMonth(y,m){ return new Date(y, m, 0).getDate(); }        // m: 1~12
-function firstWeekday(y,m){ return new Date(y, m-1, 1).getDay(); }      // 0=일 ... 6=토
-function attKey(y,m){ return `${y}-${m}`; }
+            // Render Exact Update Timestamp based on when admin saved
+            const timeBadge = document.getElementById('update-timestamp-badge');
+            if (timeBadge) timeBadge.innerText = appData.updateTimeStr || "13시 05분 기준";
 
-function applyAttDate(){
-  const mEl = document.getElementById('monthInput');
-  const dEl = document.getElementById('dayInput');
-  const m = parseInt(mEl.value,10);
-  if(!(m>=1 && m<=12)){
-    showToast('1~12월 중에서 다시 골라주세요');
-    return;
-  }
-  const dim = daysInMonth(state.att.year, m);
-  const d = parseInt(dEl.value,10);
-  if(!(d>=1 && d<=dim)){
-    showToast(`${m}월은 ${dim}일까지 있어요. 날짜를 다시 골라주세요`);
-    return;
-  }
-  state.att.month = m;
-  state.att.day = d;
-  state.quiz = null;
-  render();
-}
+            // Render Grade 3
+            const g3Obj = gradePresets.g3[appData.g3Preset] || gradePresets.g3.eating;
+            document.getElementById('display-g3-title').innerText = g3Obj.title;
+            document.getElementById('display-g3-desc').innerText = g3Obj.desc;
+            const g3Badge = document.getElementById('display-g3-badge');
+            g3Badge.innerText = g3Obj.badgeText;
+            g3Badge.className = `text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex-shrink-0 ${getThemeClass(g3Obj.theme)}`;
 
-function shuffleArr(arr){ return arr.slice().sort(()=>Math.random()-0.5); }
+            // Render Grade 2
+            const g2Obj = gradePresets.g2[appData.g2Preset] || gradePresets.g2.moving;
+            document.getElementById('display-g2-title').innerText = g2Obj.title;
+            document.getElementById('display-g2-desc').innerText = g2Obj.desc;
+            const g2Badge = document.getElementById('display-g2-badge');
+            g2Badge.innerText = g2Obj.badgeText;
+            g2Badge.className = `text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex-shrink-0 ${getThemeClass(g2Obj.theme)}`;
 
-function generateQuizObj(){
-  const idx = Math.floor(Math.random()*TERMS.length);
-  const correct = TERMS[idx];
-  const others = shuffleArr(TERMS.filter((t,i)=>i!==idx)).slice(0,3);
-  const choices = shuffleArr([
-    {term:correct.term, isCorrect:true},
-    ...others.map(o=>({term:o.term, isCorrect:false}))
-  ]);
-  return { defText:correct.def, choices, answered:false, correctIdx:choices.findIndex(c=>c.isCorrect), wrongIdx:null };
-}
+            // Render Grade 1
+            const g1Obj = gradePresets.g1[appData.g1Preset] || gradePresets.g1.waiting;
+            document.getElementById('display-g1-title').innerText = g1Obj.title;
+            document.getElementById('display-g1-desc').innerText = g1Obj.desc;
+            const g1Badge = document.getElementById('display-g1-badge');
+            g1Badge.innerText = g1Obj.badgeText;
+            g1Badge.className = `text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex-shrink-0 ${getThemeClass(g1Obj.theme)}`;
 
-function selectQuizAnswer(i){
-  const q = state.quiz;
-  if(!q || q.answered) return;
-  if(q.choices[i].isCorrect){
-    q.answered = true;
-    const r = stampToday();
-    if(!r.already){
-      if(r.monthDone){
-        showToast(`오늘 출석 완료 +${fmt(DAILY_QUIZ_REWARD)}원 · 이번 달 개근 보너스 +${fmt(MONTHLY_COMPLETE_REWARD)}원 🎉`);
-      } else {
-        showToast(`오늘 출석 완료! +${fmt(DAILY_QUIZ_REWARD)}원 지급됐어요`);
-      }
-    } else {
-      render();
-    }
-  } else {
-    q.wrongIdx = i;
-    render();
-    setTimeout(()=>{ if(state.quiz) state.quiz.wrongIdx=null; render(); }, 700);
-  }
-}
+            // 이동 안내 큰 배너 ('이동 시작' 상태인 학년이 있을 때만 표시)
+            const alertBox = document.getElementById('move-alert');
+            if (alertBox) {
+                const moving = [3, 2, 1].filter(g => appData[`g${g}Preset`] === 'moving');
+                if (moving.length === 0) {
+                    alertBox.className = 'hidden';
+                    alertBox.innerHTML = '';
+                } else {
+                    const names = moving.map(g => `${g}학년`).join(' · ');
+                    const sizeCls = moving.length === 1 ? 'text-5xl' : 'text-3xl';
+                    alertBox.className = 'fade-in';
+                    alertBox.innerHTML = `
+                        <div class="bg-gradient-to-br from-rose-500 to-orange-500 text-white rounded-3xl p-6 shadow-xl text-center border-4 border-white/40">
+                            <div class="text-sm font-bold opacity-95 mb-1">📢 급식실 이동 안내</div>
+                            <div class="${sizeCls} font-black leading-tight">${names} 이동!</div>
+                            <div class="text-base font-bold mt-3"><span class="inline-block animate-bounce">🏃</span> 급식실로 이동해 주세요</div>
+                            <div class="text-[11px] opacity-90 mt-2">${appData.updateTimeStr || ''}</div>
+                        </div>`;
+                }
+            }
 
-function stampToday(){
-  const key = attKey(state.att.year, state.att.month);
-  if(!state.att.stamped[key]) state.att.stamped[key] = [];
-  const already = state.att.stamped[key].includes(state.att.day);
-  let result = {already, monthDone:false};
-  if(!already){
-    state.att.stamped[key].push(state.att.day);
-    state.cash += DAILY_QUIZ_REWARD;
-    const dim = daysInMonth(state.att.year, state.att.month);
-    if(state.att.stamped[key].length >= dim && !state.att.monthBonusGiven[key]){
-      state.att.monthBonusGiven[key] = true;
-      state.cash += MONTHLY_COMPLETE_REWARD;
-      result.monthDone = true;
-    }
-  }
-  return result;
-}
+            renderAdminButtons();
+        }
 
-function nextAttMonth(){
-  state.att.month += 1;
-  if(state.att.month > 12){ state.att.month = 1; state.att.year += 1; }
-  state.att.day = 1;
-  state.quiz = null;
-  render();
-}
+        function getThemeClass(theme) {
+            switch(theme) {
+                case 'emerald': return 'bg-emerald-100 text-emerald-700';
+                case 'amber': return 'bg-amber-100 text-amber-700';
+                case 'rose': return 'bg-rose-100 text-rose-700';
+                case 'gray': default: return 'bg-gray-200 text-gray-700';
+            }
+        }
 
-function advanceDemoDay(){
-  // 데모 체험용: 실제로는 하루가 지나야 다음 스탬프를 찍을 수 있지만,
-  // 한 자리에서 흐름을 확인해볼 수 있도록 다음 날짜로 넘어가는 버튼을 제공한다.
-  // 이번 달의 마지막 날(예: 8월 31일)에 도달했다면, 다음 날은 다음 달 1일이 되어야 한다.
-  const dim = daysInMonth(state.att.year, state.att.month);
-  if(state.att.day < dim){
-    state.att.day += 1;
-  } else {
-    state.att.month += 1;
-    if(state.att.month > 12){ state.att.month = 1; state.att.year += 1; }
-    state.att.day = 1;
-  }
-  state.quiz = null;
-  render();
-}
+        // Tab Switching Logic (Status, Menu, Admin)
+        function switchTab(tabId) {
+            const tabs = ['status', 'menu', 'admin'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) el.classList.add('hidden');
+            });
 
-/* ============ 뉴스 탭: AI 쉬운 요약 (미리 준비된 요약 + 생각하는 연출) ============ */
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) targetTab.classList.remove('hidden');
 
-// 뉴스별로 중학생도 이해할 수 있게 미리 풀어서 써둔 쉬운 요약.
-// 실제 API를 호출하는 대신, 버튼을 누르면 잠깐 '생각하는' 연출 후 이 요약을 보여준다.
-const NEWS_SUMMARIES = {
-  n1: '한국은행이 기준금리를 2.50%에서 2.75%로 올렸어요. 기준금리는 돈을 빌릴 때 붙는 이자의 기준이 되는 값이에요. 금리가 오르면 은행에 저금할 때 이자는 더 받지만, 돈을 빌릴 땐 이자를 더 내야 해서 사람들이 돈을 좀 더 아껴 쓰게 돼요.',
-  n2: '한국개발연구원(KDI)이 올해 우리나라 경제가 3.2% 성장할 것 같다고 예상했어요. 반도체를 만들어 파는 게 잘돼서 그렇대요. 성장률이 높다는 건 나라 전체가 그만큼 돈을 더 많이 벌고 있다는 뜻이에요.',
-  n3: '원/달러 환율이 1450원대로 떨어졌어요. 환율은 우리 돈과 달러를 바꾸는 비율인데, 환율이 낮아지면 같은 달러를 살 때 우리 돈이 덜 들어서 원화 가치가 그만큼 오른 거예요.',
-  n4: '사람들이 요즘 경기를 얼마나 좋게 느끼는지 보여주는 소비자심리지수가 계속 오르고 있어요. 지금 사는 형편과 앞으로 벌 돈에 대한 기대가 둘 다 좋아지고 있다는 뜻이에요.',
-  n5: '이번 주에는 미국의 경기 상황을 보여주는 지표(PMI)랑 실업수당 신청 건수, 유럽의 물가지표(CPI) 같은 중요한 발표들이 예정돼 있어요. 이런 지표는 세계 경제가 잘 굴러가는지 가늠하는 온도계 같은 거예요.'
-};
+            // Bottom Nav styling
+            ['status', 'menu'].forEach(t => {
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (navBtn) {
+                    navBtn.classList.remove('text-orange-500');
+                    navBtn.classList.add('text-gray-400');
+                    const span = navBtn.querySelector('span');
+                    if (span) span.className = "text-[10px] font-medium";
+                }
+            });
 
-function summarizeNews(id){
-  const cur = state.newsAI[id];
-  if(cur && cur.status==='loading') return;
-  state.newsAI[id] = { status:'loading' };
-  render();
-  // 실제로 생각하는 듯한 느낌을 주기 위해 짧게 기다렸다가 결과를 보여준다.
-  setTimeout(()=>{
-    const text = NEWS_SUMMARIES[id];
-    state.newsAI[id] = text ? { status:'done', text } : { status:'error' };
-    render();
-  }, 1100 + Math.random()*700);
-}
-function openStock(id){ state.selectedStock=id; state.tradeMode='buy'; state.tradeQty=1; state.tradeQtyInput=null; state.tradeReason=''; render(); }
-function closeStock(){ state.selectedStock=null; render(); }
-function setTradeMode(m){ state.tradeMode=m; state.tradeReason=''; render(); }
-function changeQty(d){ state.tradeQty = Math.min(MAX_QTY, Math.max(1, state.tradeQty+d)); state.tradeQtyInput=null; render(); }
-function setTradeReason(v){
-  // 전체 재렌더 없이 상태만 갱신 -> 입력 중 커서가 안정적으로 유지됨
-  state.tradeReason = v;
-  updateTradeSummary();
-}
-function setQty(v){
-  // 숫자가 아닌 문자는 제거하고, 입력창 DOM 자체는 건드리지 않는다 (재렌더로 인한 커서 튐 방지)
-  const digits = v.replace(/[^0-9]/g,'');
-  if(digits !== v){
-    const el = document.getElementById('qtyInput');
-    if(el) el.value = digits;
-  }
-  state.tradeQtyInput = digits;
-  const n = parseInt(digits, 10);
-  if(n>0) state.tradeQty = Math.min(n, MAX_QTY);
-  updateTradeSummary(); // 전체 재렌더 없이 금액·버튼만 갱신 -> 입력 중 커서가 안정적으로 유지됨
-}
-function updateTradeSummary(){
-  if(!state.selectedStock) return;
-  const c = co(state.selectedStock);
-  const s = state.stocks[c.id];
-  const h = state.holdings[c.id] || {qty:0, avg:0};
-  const qty = state.tradeQty;
-  const cost = qty * s.price;
-  const amtEl = document.getElementById('tradeCostVal');
-  if(amtEl) amtEl.textContent = fmt(cost) + '원';
-  const hasReason = (state.tradeReason||'').trim().length>0;
-  const btn = document.getElementById('confirmBtn');
-  if(btn){
-    if(state.tradeMode==='buy'){
-      const canBuy = state.cash >= cost && hasReason;
-      btn.disabled = !canBuy;
-      btn.style.opacity = canBuy? '1':'.4';
-      btn.textContent = !hasReason ? '매수 이유를 적어주세요' : (state.cash>=cost ? '매수하기' : '현금이 부족해요');
-    } else {
-      const canSell = h.qty >= qty && hasReason;
-      btn.disabled = !canSell;
-      btn.style.opacity = canSell? '1':'.4';
-      btn.textContent = !hasReason ? '매도 이유를 적어주세요' : (h.qty>=qty ? '매도하기' : '보유 수량이 부족해요');
-    }
-  }
-}
-function blurQty(){
-  // 입력창을 벗어나면 값을 정리(최소 1)한다.
-  // 주의: 여기서 render()로 화면 전체를 다시 그리면, 다른 버튼(매수/매도 등)을 누르는
-  // 클릭 도중 blur가 먼저 발생해 그 버튼 자체가 교체되면서 클릭이 씹히는 문제가 생긴다.
-  // 그래서 전체 재렌더 없이 입력창 값과 관련 UI만 직접 갱신한다.
-  state.tradeQty = Math.min(MAX_QTY, Math.max(1, state.tradeQty||1));
-  state.tradeQtyInput = null;
-  const el = document.getElementById('qtyInput');
-  if(el) el.value = state.tradeQty;
-  updateTradeSummary();
-}
+            if (tabId === 'status' || tabId === 'menu') {
+                const targetNav = document.getElementById(`nav-${tabId}`);
+                if (targetNav) {
+                    targetNav.classList.remove('text-gray-400');
+                    targetNav.classList.add('text-orange-500');
+                    const span = targetNav.querySelector('span');
+                    if (span) span.className = "text-[10px] font-bold";
+                }
+            }
 
-function showToast(msg){
-  state.toast = msg;
-  render();
-  setTimeout(()=>{ state.toast=null; render(); }, 1600);
-}
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) mainContent.scrollTop = 0;
+        }
 
-function doTrade(type){
-  const id = state.selectedStock;
-  const c = co(id);
-  const price = state.stocks[id].price;
-  const qty = Math.min(state.tradeQty, MAX_QTY);
-  const amount = price*qty;
-  const reason = (state.tradeReason||'').trim();
-  if(!reason) return; // 이유를 적지 않으면 거래할 수 없음
-  if(type==='buy'){
-    if(state.cash < amount) return;
-    state.cash -= amount;
-    const h = state.holdings[id] || {qty:0, avg:0};
-    const newQty = h.qty+qty;
-    const newAvg = (h.avg*h.qty + amount)/newQty;
-    state.holdings[id] = {qty:newQty, avg:newAvg};
-    state.tx.push({type:'buy', name:c.name, qty, amount, time:nowStr(), reason});
-    addBoardPost({type:'buy', companyId:c.id, stockName:c.name, qty, price, reason});
-    showToast(`${c.name} ${qty}주 매수 완료`);
-  } else {
-    const h = state.holdings[id];
-    if(!h || h.qty < qty) return;
-    h.qty -= qty;
-    state.cash += amount;
-    state.tx.push({type:'sell', name:c.name, qty, amount, time:nowStr(), reason});
-    addBoardPost({type:'sell', companyId:c.id, stockName:c.name, qty, price, reason});
-    showToast(`${c.name} ${qty}주 매도 완료`);
-  }
-  state.tradeQty = 1;
-  state.tradeQtyInput = null;
-  state.tradeReason = '';
-}
+        // Password Modal Handlers
+        function openPasswordModal() {
+            const modal = document.getElementById('password-modal');
+            const content = document.getElementById('password-modal-content');
+            const input = document.getElementById('admin-password-input');
+            input.value = "";
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+                input.focus();
+            }, 10);
+        }
 
-render();
-</script>
+        function closePasswordModal() {
+            const modal = document.getElementById('password-modal');
+            const content = document.getElementById('password-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function verifyAdminPassword() {
+            const inputVal = document.getElementById('admin-password-input').value;
+            if (inputVal === "JJ1234") {
+                closePasswordModal();
+                switchTab('admin');
+                showToast('도우미 관리자 모드에 입장했습니다.');
+            } else {
+                showToast('비밀번호가 올바르지 않습니다.');
+                const inputEl = document.getElementById('admin-password-input');
+                inputEl.classList.add('border-rose-500', 'bg-rose-50');
+                setTimeout(() => {
+                    inputEl.classList.remove('border-rose-500', 'bg-rose-50');
+                }, 1000);
+            }
+        }
+
+        // ---- 관리자 큰 버튼 (누르면 즉시 저장 + 홈 화면 반영) ----
+        const congestionOptions = [
+            { key: 'green', emoji: '🟢', label: '여유', sub: '대기 2~5분', on: 'bg-emerald-500 text-white border-emerald-600 shadow-md' },
+            { key: 'yellow', emoji: '🟡', label: '보통', sub: '대기 6~10분', on: 'bg-amber-500 text-white border-amber-600 shadow-md' },
+            { key: 'orange', emoji: '🟠', label: '혼잡', sub: '대기 11~20분', on: 'bg-orange-600 text-white border-orange-700 shadow-md' },
+            { key: 'red', emoji: '🔴', label: '매우 혼잡', sub: '대기 21분 이상', on: 'bg-rose-600 text-white border-rose-700 shadow-md' }
+        ];
+        const stateButtons = [
+            { key: 'waiting', emoji: '🔒', label: '교실 대기', on: 'bg-gray-600 text-white border-gray-700 shadow-md' },
+            { key: 'moving', emoji: '🏃', label: '이동 시작', on: 'bg-rose-500 text-white border-rose-600 shadow-md' },
+            { key: 'eating', emoji: '🍽️', label: '식사 중', on: 'bg-emerald-500 text-white border-emerald-600 shadow-md' },
+            { key: 'done', emoji: '✅', label: '식사 완료', on: 'bg-sky-500 text-white border-sky-600 shadow-md' }
+        ];
+        const BTN_BASE = "flex flex-col items-center justify-center min-h-[64px] rounded-2xl border-2 px-2 py-2 transition active:scale-95 select-none";
+        const BTN_OFF = "bg-white text-gray-700 border-gray-200 hover:bg-gray-50";
+
+        function renderAdminButtons() {
+            const cBox = document.getElementById('admin-congestion-buttons');
+            if (cBox) {
+                cBox.innerHTML = congestionOptions.map(o => {
+                    const active = appData.congestionKey === o.key;
+                    return `<button onclick="setCongestion('${o.key}')" class="${BTN_BASE} ${active ? o.on : BTN_OFF}">
+                                <span class="text-xl">${o.emoji}</span>
+                                <span class="font-extrabold text-sm">${o.label}</span>
+                                <span class="text-[11px] opacity-80">${o.sub}</span>
+                            </button>`;
+                }).join('');
+            }
+
+            const gBox = document.getElementById('admin-grade-sections');
+            if (gBox) {
+                gBox.innerHTML = [3, 2, 1].map(g => {
+                    const cur = appData[`g${g}Preset`];
+                    const curLabel = (stateButtons.find(b => b.key === cur) || {}).label || '';
+                    const btns = stateButtons.map(b => {
+                        const active = cur === b.key;
+                        return `<button onclick="setGradeState(${g}, '${b.key}')" class="${BTN_BASE} ${active ? b.on : BTN_OFF}">
+                                    <span class="text-xl">${b.emoji}</span>
+                                    <span class="font-extrabold text-sm">${b.label}</span>
+                                </button>`;
+                    }).join('');
+                    return `<div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 space-y-3">
+                                <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                                    <span class="font-extrabold text-gray-900 text-base"><i class="fa-solid fa-graduation-cap mr-1.5 text-orange-500"></i>${g}학년</span>
+                                    <span class="text-[11px] font-bold text-gray-400">현재: ${curLabel}</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2.5">${btns}</div>
+                            </div>`;
+                }).join('');
+            }
+        }
+
+        // 버튼을 누른 정확한 시각을 기록하고 저장 (예: 13시 05분 기준)
+        function commitAdminChange(toastMsg) {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            appData.updateTimeStr = `${hours}시 ${minutes}분 기준`;
+            try {
+                localStorage.setItem('jakjeon_gubsik_app_data_v6', JSON.stringify(appData));
+            } catch (e) { console.error(e); }
+            renderAppData();
+            showToast(`${toastMsg} (${appData.updateTimeStr})`);
+        }
+
+        function setCongestion(key) {
+            appData.congestionKey = key;
+            const o = congestionOptions.find(x => x.key === key);
+            commitAdminChange(`혼잡도 ${o.label} 반영`);
+        }
+
+        function setGradeState(grade, key) {
+            appData[`g${grade}Preset`] = key;
+            const b = stateButtons.find(x => x.key === key);
+            commitAdminChange(`${grade}학년 ${b.label} 반영`);
+        }
+
+        // Jakjeon High School November 2026 Menu Data (학교 이달의 식단 기준)
+        const menuData = {
+            2: {"wd": "월", "rice": "율무밥", "soup": "물만두국", "sides": "치즈찜케이크, 오삼불고기, 고구마맛탕, 도시락김, 깍두기", "allergy": "난류, 우유, 대두, 밀, 고등어, 새우, 돼지고기, 아황산류, 쇠고기, 오징어, 조개류"},
+            3: {"wd": "화", "rice": "찰흑미밥", "soup": "고추장얼큰수제비국", "sides": "안동찜닭, 스팸마늘쫑볶음, 배추김치", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 아황산류, 닭고기, 쇠고기, 조개류"},
+            4: {"wd": "수", "rice": "나물비빔밥&약고추장", "soup": "차돌박이된장찌개", "sides": "미나리무생채, 깡돼후(깡통시장돼지후라이), 깍두기, 복숭아에이드", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 복숭아, 아황산류, 쇠고기, 조개류"},
+            5: {"wd": "목", "rice": "기장밥", "soup": "전주식콩나물국", "sides": "배추김치, 가지굴소스볶음, 대패오리불고기", "allergy": "대두, 밀, 새우, 아황산류, 오징어, 조개류"},
+            6: {"wd": "금", "rice": "보리밥", "soup": "참치김치찌개", "sides": "숙성한입돈육소금구이, 양배추쌈&쌈장, 배추김치, 파인애플", "allergy": "대두, 밀, 새우, 돼지고기, 아황산류, 쇠고기, 조개류"},
+            9: {"wd": "월", "rice": "귀리밥", "soup": "장각닭죽", "sides": "도라지진미무침, 통콘너겟&웨지감자, 석박지, 허니유자봉", "allergy": "난류, 대두, 밀, 새우, 아황산류, 닭고기, 오징어"},
+            10: {"wd": "화", "rice": "차조밥", "soup": "근대된장국", "sides": "등갈비김치찜, 애호박새우젓볶음, 오이소박이", "allergy": "대두, 밀, 새우, 돼지고기, 아황산류"},
+            11: {"wd": "수", "rice": "찹쌀추가밥", "soup": "없음", "sides": "쉬림프투움바파스타, 양상추샐러드&요거트 드레싱, 빼빼롱소시지, 깍두기, 블링블링빼빼로", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 토마토, 아황산류, 닭고기, 쇠고기"},
+            12: {"wd": "목", "rice": "차수수밥", "soup": "조랭이떡국", "sides": "치즈불닭, 미역줄기볶음, 배추김치", "allergy": "난류, 우유, 대두, 밀, 새우, 토마토, 아황산류, 닭고기"},
+            13: {"wd": "금", "rice": "현미밥", "soup": "한우소머리국밥", "sides": "오이양파무침, 피자소떡소떡, 석박지, 행운의 금메달(초콜랫)", "allergy": "우유, 대두, 밀, 새우, 토마토, 아황산류, 쇠고기"},
+            16: {"wd": "월", "rice": "보리밥", "soup": "보승회관삼색순대국", "sides": "무말랭이무침, 메밀김치전병, 석박지, 귤, 풋고추된장무침", "allergy": "우유, 메밀, 대두, 밀, 새우, 돼지고기, 아황산류, 쇠고기, 조개류"},
+            17: {"wd": "화", "rice": "찰흑미밥", "soup": "부대찌개", "sides": "삼치구이/데리야끼소스, 청경채무침, 알타리김치", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 토마토, 아황산류, 닭고기, 쇠고기"},
+            18: {"wd": "수", "rice": "인델리커리", "soup": "없음", "sides": "과일샐러드, 왕돈까스, 깍두기, 초코우유", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 토마토, 아황산류, 쇠고기, 조개류"},
+            23: {"wd": "월", "rice": "율무밥", "soup": "차돌육개장", "sides": "불향가득산적구이, 알감자버터구이, 배추김치, 바나나", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 토마토, 아황산류, 쇠고기"},
+            24: {"wd": "화", "rice": "귀리밥", "soup": "바지락살미역국", "sides": "닭도리탕, 고등어마요네즈구이, 깍두기, 딸기우유", "allergy": "난류, 우유, 대두, 밀, 고등어, 새우, 아황산류, 닭고기, 조개류"},
+            25: {"wd": "수", "rice": "찹쌀추가밥", "soup": "없음", "sides": "짜장소스&중화면, 폭신폭신 고기부추따바오, 단무지무침, 배추김치, 망고쥬스", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 아황산류, 쇠고기, 조개류"},
+            26: {"wd": "목", "rice": "혼합15곡밥", "soup": "해물순두부찌개", "sides": "부추달걀볶음, 숯불파채제육볶음, 깍두기", "allergy": "난류, 대두, 밀, 새우, 돼지고기, 아황산류, 오징어, 조개류"},
+            27: {"wd": "금", "rice": "찰흑미밥", "soup": "잔치국수", "sides": "꽈리고추방울오징어볶음, 대구까스/타르소스, 배추김치, 티라미수찹쌀떡", "allergy": "난류, 대두, 밀, 새우, 아황산류, 오징어"},
+            30: {"wd": "월", "rice": "현미밥", "soup": "돼지뼈감자탕", "sides": "사과오이무침, 북경식꿔바로우, 깍두기, 락토핏 마시는 유산균", "allergy": "난류, 우유, 대두, 밀, 새우, 돼지고기, 토마토, 아황산류"}
+        };
+
+        const CHIP_ON = "menu-chip bg-orange-500 text-white px-4 py-2 rounded-2xl text-xs font-bold shadow-sm flex-shrink-0 transition";
+        const CHIP_OFF = "menu-chip bg-white text-gray-600 border border-gray-200 px-4 py-2 rounded-2xl text-xs font-medium flex-shrink-0 transition hover:bg-gray-50 shadow-sm";
+        const MENU_YEAR = 2026, MENU_MONTH = 11;
+
+        function getTodayInMenu() {
+            const now = new Date();
+            if (now.getFullYear() === MENU_YEAR && (now.getMonth() + 1) === MENU_MONTH && menuData[now.getDate()]) {
+                return now.getDate();
+            }
+            return null;
+        }
+
+        function selectMenuDate(day) {
+            const data = menuData[day];
+            if (!data) return;
+
+            document.getElementById('selected-menu-date-title').innerText = `${MENU_MONTH}월 ${day}일 (${data.wd}) 작전고 식단`;
+            document.getElementById('selected-menu-kcal').classList.add('hidden');
+            document.getElementById('menu-rice').innerText = data.rice;
+            document.getElementById('menu-soup').innerText = data.soup;
+            document.getElementById('menu-sides').innerText = data.sides;
+            document.getElementById('menu-allergy').innerText = `알레르기 정보: ${data.allergy}`;
+
+            document.querySelectorAll('.menu-chip').forEach(chip => {
+                chip.className = (Number(chip.dataset.day) === day) ? CHIP_ON : CHIP_OFF;
+            });
+        }
+
+        function initMenu() {
+            const today = getTodayInMenu();
+            const days = Object.keys(menuData).map(Number);
+
+            const chipBox = document.getElementById('menu-date-chips');
+            chipBox.innerHTML = days.map(day => {
+                const label = (day === today) ? `오늘 (${day}일)` : `${day}일 (${menuData[day].wd})`;
+                return `<button data-day="${day}" onclick="selectMenuDate(${day})" class="${CHIP_OFF}">${label}</button>`;
+            }).join('');
+
+            const listBox = document.getElementById('menu-list');
+            listBox.innerHTML = days.map(day => {
+                const m = menuData[day];
+                const isToday = (day === today);
+                const dateCls = isToday ? "font-bold text-orange-600 w-16" : "font-bold text-gray-600 w-16";
+                const textCls = isToday ? "text-gray-800 flex-1 px-2 font-semibold" : "text-gray-800 flex-1 px-2";
+                const soupPart = (m.soup === "없음") ? "" : ` & ${m.soup}`;
+                const mainDish = m.sides.split(", ")[0];
+                return `<div class="py-2.5 flex justify-between items-center">
+                            <span class="${dateCls}">${MENU_MONTH}/${day} (${m.wd})</span>
+                            <span class="${textCls}">${m.rice}${soupPart} & ${mainDish}</span>
+                        </div>`;
+            }).join('');
+
+            // 오늘 식단이 있으면 오늘, 없으면 가장 가까운 다음 식단일(없으면 첫날)을 선택
+            const now = new Date();
+            let target = today;
+            if (target === null) {
+                const startDay = (now.getFullYear() === MENU_YEAR && (now.getMonth() + 1) === MENU_MONTH) ? now.getDate() : 0;
+                target = days.find(d => d >= startDay) || days[0];
+            }
+            selectMenuDate(target);
+        }
+        initMenu();
+
+        // Custom Toast Notification System (No alert usage)
+        function showToast(message) {
+            const toast = document.getElementById('toast-box');
+            const msgSpan = document.getElementById('toast-message');
+            msgSpan.innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            const now = new Date();
+            const months = now.getMonth() + 1;
+            const dates = now.getDate();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayStr = days[now.getDay()];
+            const badgeEl = document.getElementById('current-date-badge');
+            if (badgeEl) {
+                badgeEl.innerText = `${now.getFullYear()}년 ${months}월 ${dates}일 (${dayStr})`;
+            }
+
+            loadAppData();
+        };
+    </script>
 </body>
 </html>
